@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>AJAX/PHP/CURL/JSON example</title>
+    <meta name="description" content="AJAX/PHP/CURL/JSON example" />
+    <meta name="author" content="Liam Vicary" />
+    <link rel="stylesheet" href="libs/css/index.css" />
+  </head>
+
+  <body>
+    <!--FIRST API IMPLEMENTATION-->
+
+    <h1>Which ocean are you in?.</h1>
+    <p>Use the sliders to select a random 'latitude' and 'longitude'.</p>
+    <table id="options">
+      <tr>
+        <td>
+          <p>Latitude:</p>
+
+          <input
+            type="range"
+            min="-90.0"
+            max="90.0"
+            value="0"
+            id="slideLatitude"
+          />
+
+          <br /><br />
+          <p>Longitude:</p>
+
+          <input
+            orient="vertical"
+            type="range"
+            min="-180.0"
+            max="180.0"
+            value="0"
+            id="slideLongitude"
+          />
+
+          <br /><br />
+          <button id="btnRun3">Search</button>
+        </td>
+      </tr>
+    </table>
+
+    <br /><br />
+
+    <div>
+      <table id="results">
+        <tr>
+          <td align="right">Ocean:</td>
+          <td id="txtOceanName"></td>
+        </tr>
+      </table>
+    </div>
+
+    <script
+      type="application/javascript"
+      src="libs/js/jquery-2.2.3.min.js"
+    ></script>
+    <script type="application/javascript" src="libs/js/script.js"></script>
+  </body>
+</html>
