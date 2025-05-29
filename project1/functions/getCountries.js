@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const sel = document.getElementById("countrySelect");
 
-  fetch("get_countries.php")
+  fetch("functions/get_countries.php")
     .then((response) => {
       if (!response.ok) throw new Error("Network response was not OK");
       return response.json();
