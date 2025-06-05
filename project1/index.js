@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
 
-  // 3) WHEN USER CHOOSES A COUNTRY → FETCH BORDER + GEOCODE
+  // FETCH BORDER + GEOCODE
 
   sel.addEventListener("change", (e) => {
     const isoCode = e.target.value;
@@ -144,12 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const { lat, lng } = data.results[0].geometry;
         console.log(`Geocoded ${countryName} → lat=${lat}, lng=${lng}`);
 
-        // Use these coordinates: for example, put a marker or pan the map
         if (window.geocodeMarker) {
           map.removeLayer(window.geocodeMarker);
         }
         window.geocodeMarker = L.marker([lat, lng]).addTo(map);
-        // Optionally open a popup or adjust zoom:
+
         window.geocodeMarker
           .bindPopup(`${countryName}: [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
           .openPopup();
@@ -160,7 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
           "modalCoordinates"
         ).textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
-        // 3) Finally, show the Bootstrap modal
         $("#exampleModal").modal("show");
       })
       .catch((err) => {
@@ -194,30 +192,28 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch((err) => console.error("Reverse geocode error:", err));
     });
   });
-  // Somewhere in your DOMContentLoaded or in a button handler:
+
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
 
-        // 1) Add a marker at the user’s location
         if (window.userMarker) {
           map.removeLayer(window.userMarker);
         }
         window.userMarker = L.marker([lat, lng], {
           icon: L.icon({
-            /* custom icon if you want */
+            //Custom icon goes here
           }),
         })
           .addTo(map)
           .bindPopup("You are here")
           .openPopup();
 
-        // 2) Optionally pan/zoom to their location
         map.setView([lat, lng], 10);
 
-        // 3) Reverse‐geocode to get a human‐readable address
+        //Reverse‐geocode to get a human‐readable address
         const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
         fetch(phpReverseUrl)
           .then((res) => {
@@ -227,9 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .then((data) => {
             if (data.results && data.results.length > 0) {
               const place = data.results[0].formatted;
-              // You could fill your modal with this, e.g.:
               document.getElementById("modalLocationName").textContent = place;
-              // or just update the marker popup:
               window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
             }
           })
