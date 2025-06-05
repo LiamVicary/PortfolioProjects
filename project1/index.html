@@ -32,7 +32,7 @@
     <span id="selectContainer">
       <select id="countrySelect" class="form-select shadow-sm">
         <!-- populate from an AJAX CALL to a PHP routine that returns a JSON object that is an array of just ISO codes and names from countryBorders.geo.json -->
-        <option value="AF">Afghanistan</option>
+        <option value="">Select a country</option>
       </select>
     </span>
 
@@ -52,6 +52,7 @@
               aria-label="Close"
             ></button>
           </div>
+          <span id="modalLocationName"></span>
           <div class="modal-body">
             <table class="table table-striped">
               <tr>
@@ -59,18 +60,18 @@
                   <i class="fa-solid fa-street-view fa-xl text-success"></i>
                 </td>
 
-                <td>Attribute</td>
+                <td>Country:</td>
 
-                <td class="text-end">value</td>
+                <td class="text-end" id="modalCountryName">…</td>
               </tr>
               <tr>
                 <td class="text-center">
-                  <i class="fa-solid fa-heart fa-xl text-success"></i>
+                  <i class="fa-solid fa-location-pin fa-xl text-success"></i>
                 </td>
 
-                <td>Attribute</td>
+                <td>Coodinates</td>
 
-                <td class="text-end">value</td>
+                <td class="text-end" id="modalCoordinates">…</td>
               </tr>
               <tr>
                 <td class="text-center">
@@ -257,7 +258,7 @@
         </div>
       </div>
     </div>
-    <script src="functions/getCountries.js"></script>
+
     <script
       src="https://code.jquery.com/jquery-3.6.0.min.js"
       crossorigin="anonymous"
@@ -268,7 +269,6 @@
       crossorigin=""
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-    <script src="JavaScript/index.js"></script>
-    <script src="functions/getCountriesBorder.js"></script>
+    <script src="index.js"></script>
   </body>
 </html>
