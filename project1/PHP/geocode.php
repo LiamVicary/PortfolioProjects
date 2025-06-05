@@ -2,27 +2,25 @@
 // php/geocode.php
 header('Content-Type: application/json');
 
-// NOTE: hard-code your key here, or load from a secure config file
 $OPENCAGE_KEY = '64babd120bf641ba8d7387a9e0519c0d';
 
+//FORWARD
 if (isset($_GET['q'])) {
-    // Forward geocoding: country name or any address
     $query = urlencode(trim($_GET['q']));
-    $limit = 1; // just take the first result
-
+    $limit = 1; 
     $url = "https://api.opencagedata.com/geocode/v1/json"
          . "?q={$query}"
          . "&key={$OPENCAGE_KEY}"
          . "&limit={$limit}";
 }
+//REVERSE
 elseif (isset($_GET['lat']) && isset($_GET['lng'])) {
-  // → Reverse geocoding
   $lat = floatval($_GET['lat']);
   $lng = floatval($_GET['lng']);
   $url = "https://api.opencagedata.com/geocode/v1/json"
        . "?q={$lat}+{$lng}"
        . "&key={$OPENCAGE_KEY}"
-       . "&no_annotations=1"      // you can tweak parameters as needed
+       . "&no_annotations=1"      
        . "&limit=1";
 }
 else {
@@ -45,7 +43,5 @@ else {
     echo $response;
     exit;
   
-
-// If you reach here without `q`, return an error
 http_response_code(400);
 echo json_encode(['error' => 'Missing "q" parameter for forward geocoding']);
