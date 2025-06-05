@@ -82,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // 3) WHEN USER CHOOSES A COUNTRY → FETCH BORDER + GEOCODE
-  const OPENCAGE_KEY = "64babd120bf641ba8d7387a9e0519c0d";
 
   sel.addEventListener("change", (e) => {
     const isoCode = e.target.value;
@@ -123,36 +122,126 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // GEOCODE THE COUNTRY VIA OPENCAGE
 
-    const geocodeUrl = new URL("https://api.opencagedata.com/geocode/v1/json");
-    geocodeUrl.searchParams.set("q", countryName);
-    geocodeUrl.searchParams.set("key", OPENCAGE_KEY);
-    geocodeUrl.searchParams.set("limit", "1");
+    const phpGeocodeUrl = `PHP/geocode.php?q=${encodeURIComponent(
+      countryName
+    )}`;
 
-    console.log("Requesting OpenCage geocode:", geocodeUrl.toString());
-
-    fetch(geocodeUrl.toString())
+    fetch(phpGeocodeUrl)
       .then((res) => {
         if (!res.ok) {
-          throw new Error("OpenCage HTTP " + res.status + " " + res.statusText);
+          throw new Error(
+            "Proxy geocode failed: " + res.status + " " + res.statusText
+          );
         }
         return res.json();
       })
       .then((data) => {
         if (!data.results || data.results.length === 0) {
-          console.warn(
-            "OpenCage returned no results for",
-            countryName,
-            "full response:",
-            data
-          );
+          console.warn("Proxy returned no results for", countryName, data);
           return;
         }
 
         const { lat, lng } = data.results[0].geometry;
         console.log(`Geocoded ${countryName} → lat=${lat}, lng=${lng}`);
+
+        // Use these coordinates: for example, put a marker or pan the map
+        if (window.geocodeMarker) {
+          map.removeLayer(window.geocodeMarker);
+        }
+        window.geocodeMarker = L.marker([lat, lng]).addTo(map);
+        // Optionally open a popup or adjust zoom:
+        window.geocodeMarker
+          .bindPopup(`${countryName}: [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
+          .openPopup();
+        map.setView([lat, lng], 5);
+
+        document.getElementById("modalCountryName").textContent = countryName;
+        document.getElementById(
+          "modalCoordinates"
+        ).textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+        // 3) Finally, show the Bootstrap modal
+        $("#exampleModal").modal("show");
       })
       .catch((err) => {
-        console.error("Failed to geocode", countryName, err);
+        console.error("Failed to geocode via proxy for", countryName, err);
       });
+
+    map.on("click", function (e) {
+      const { lat, lng } = e.latlng;
+      const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
+
+      fetch(phpReverseUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error(res.status + " " + res.statusText);
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.results && data.results.length > 0) {
+            const place = data.results[0].formatted;
+            L.popup()
+              .setLatLng([lat, lng])
+              .setContent(
+                `You clicked at ${lat.toFixed(4)}, ${lng.toFixed(
+                  4
+                )}<br>Address: ${place}`
+              )
+              .openOn(map);
+          } else {
+            console.warn("No reverse‐geocode result", data);
+          }
+        })
+        .catch((err) => console.error("Reverse geocode error:", err));
+    });
   });
+  // Somewhere in your DOMContentLoaded or in a button handler:
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        // 1) Add a marker at the user’s location
+        if (window.userMarker) {
+          map.removeLayer(window.userMarker);
+        }
+        window.userMarker = L.marker([lat, lng], {
+          icon: L.icon({
+            /* custom icon if you want */
+          }),
+        })
+          .addTo(map)
+          .bindPopup("You are here")
+          .openPopup();
+
+        // 2) Optionally pan/zoom to their location
+        map.setView([lat, lng], 10);
+
+        // 3) Reverse‐geocode to get a human‐readable address
+        const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
+        fetch(phpReverseUrl)
+          .then((res) => {
+            if (!res.ok) throw new Error(res.status + " " + res.statusText);
+            return res.json();
+          })
+          .then((data) => {
+            if (data.results && data.results.length > 0) {
+              const place = data.results[0].formatted;
+              // You could fill your modal with this, e.g.:
+              document.getElementById("modalLocationName").textContent = place;
+              // or just update the marker popup:
+              window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
+            }
+          })
+          .catch((err) =>
+            console.error("Reverse geocode (user location) error:", err)
+          );
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+      }
+    );
+  } else {
+    console.warn("Geolocation not available in this browser");
+  }
 });
