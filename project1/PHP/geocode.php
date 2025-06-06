@@ -2,7 +2,7 @@
 // php/geocode.php
 header('Content-Type: application/json');
 
-$OPENCAGE_KEY = '64babd120bf641ba8d7387a9e0519c0d';
+$OPENCAGE_KEY = '496216fafb274d8baa5cb5097563c57f';
 
 //FORWARD
 if (isset($_GET['q'])) {
