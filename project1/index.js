@@ -135,8 +135,51 @@ document.addEventListener("DOMContentLoaded", () => {
         return res.json();
       })
       .then(({ capital }) => {
+        const capitalCity =
+          Array.isArray(capital) && capital.length ? capital[0] : null;
         document.getElementById("modalCapitalCity").textContent =
-          Array.isArray(capital) && capital.length ? capital[0] : "—";
+          capitalCity || "—";
+
+        if (!capitalCity) return;
+
+        // Geocode the capital city
+        fetch(
+          `PHP/geocode.php?q=${encodeURIComponent(
+            capitalCity + ", " + countryName
+          )}`
+        )
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          })
+          .then((geoData) => {
+            if (!geoData.results || geoData.results.length === 0) return;
+
+            const { lat, lng } = geoData.results[0].geometry;
+
+            // Remove old marker if any
+            if (window.capitalMarker) {
+              map.removeLayer(window.capitalMarker);
+            }
+
+            const capitalIcon = L.icon({
+              iconUrl: "images/capital-marker.png",
+              iconSize: [60, 60],
+              iconAnchor: [15, 40],
+              popupAnchor: [0, -35],
+            });
+
+            window.capitalMarker = L.marker([lat, lng], { icon: capitalIcon })
+              .addTo(map)
+              .bindPopup(
+                `<strong>${capitalCity}</strong><br>${lat.toFixed(
+                  4
+                )}, ${lng.toFixed(4)}`
+              );
+          })
+          .catch((err) => {
+            console.error("Failed to geocode capital city:", err);
+          });
       })
       .catch((err) => {
         console.error("Failed to fetch capital:", err);
