@@ -28,9 +28,24 @@ var basemaps = {
 };
 
 // buttons
-
+// EXAMPLE MODAL
 var infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
+});
+
+// WEATHER MODAL
+var weatherBtn = L.easyButton("fa-cloud-sun fa-xl", function (btn, map) {
+  $("#weatherModal").modal("show");
+});
+
+// CURRENCY MODAL
+var currencyBtn = L.easyButton("fa-coins fa-xl", function (btn, map) {
+  $("#currencyModal").modal("show");
+});
+
+// FLAG MODAL
+var flagBtn = L.easyButton("fa-flag fa-xl", function (btn, map) {
+  $("#flagModal").modal("show");
 });
 
 // SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
@@ -44,6 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   L.control.layers(basemaps).addTo(map);
   infoBtn.addTo(map);
+  weatherBtn.addTo(map);
+  currencyBtn.addTo(map);
+  flagBtn.addTo(map);
 
   // POPULATE <select>
 
@@ -81,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
 
+  // --------------------------------------INFORMATION MODAL--------------------------------------
   // FETCH BORDER + GEOCODE
 
   sel.addEventListener("change", (e) => {
@@ -91,7 +110,222 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // MODAL - REGION
     console.log("User selected ISO =", isoCode, "name =", countryName);
+
+    fetch(`PHP/get_region.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(({ region }) => {
+        document.getElementById("modalRegion").textContent = region || "—";
+      })
+      .catch((err) => {
+        console.error("Failed to fetch region:", err);
+        document.getElementById("modalRegion").textContent = "Error";
+      });
+
+    // MODAL - CAPITAL CITY
+    console.log("User selected ISO =", isoCode, "name =", countryName);
+
+    fetch(`PHP/get_capital.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(({ capital }) => {
+        document.getElementById("modalCapitalCity").textContent =
+          Array.isArray(capital) && capital.length ? capital[0] : "—";
+      })
+      .catch((err) => {
+        console.error("Failed to fetch capital:", err);
+        document.getElementById("modalCapitalCity").textContent = "Error";
+      });
+
+    // MODAL - LANGUAGES
+    console.log("User selected ISO =", isoCode, "name =", countryName);
+
+    fetch(`PHP/get_languages.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(({ languages }) => {
+        const firstLang = languages ? Object.values(languages)[0] : "—";
+        document.getElementById("modalLanguage").textContent = firstLang;
+      })
+      .catch((err) => {
+        console.error("Failed to fetch languages:", err);
+        document.getElementById("modalLanguage").textContent = "Error";
+      });
+
+    // MODAL - POPULATION
+    console.log("User selected ISO =", isoCode, "name =", countryName);
+
+    fetch(`PHP/get_population.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(({ population }) => {
+        const popText =
+          typeof population === "number" ? population.toLocaleString() : "—";
+
+        document.getElementById("modalCountryPopulation").textContent = popText;
+      })
+      .catch((err) => {
+        console.error("Failed to fetch population:", err);
+        document.getElementById("modalCountryPopulation").textContent = "Error";
+      });
+
+    // MODAL - FLAG
+    console.log("User selected ISO =", isoCode, "name =", countryName);
+
+    fetch(`PHP/get_flag.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(({ flag }) => {
+        const img = document.getElementById("modalFlagImage");
+        if (flag) {
+          img.src = flag;
+          img.alt = countryName + " flag";
+        } else {
+          img.src = "";
+          img.alt = "No flag available";
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch flag:", err);
+        const img = document.getElementById("modalFlagImage");
+        img.src = "";
+        img.alt = "Error loading flag";
+      });
+
+    // --------------------------------------WEATHER MODAL--------------------------------------
+
+    const countrySelect = document.querySelector("#countrySelect");
+    const weatherModalEl = document.querySelector("#weatherModal");
+
+    countrySelect.addEventListener("change", () => {
+      const idx = countrySelect.selectedIndex;
+      if (idx <= 0) return;
+      const country = countrySelect.options[idx].text;
+      fetchCurrentWeather(country);
+    });
+
+    function fetchCurrentWeather(country) {
+      fetch(
+        `PHP/get_current_weather.php?country=${encodeURIComponent(country)}`
+      )
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          // COUNTRY & DAY
+          document.getElementById(
+            "modalWeatherLocation"
+          ).textContent = `${data.location.country}`;
+          const local = data.location.localtime; // "YYYY-MM-DD hh:mm"
+          const dayName = new Date(local).toLocaleDateString("en-GB", {
+            weekday: "long",
+          });
+          document.getElementById("modalWeatherDay").textContent = dayName;
+
+          // ICONS & CONDITION
+          document.getElementById("modalWeatherIconBig").src =
+            data.current.condition.icon;
+          document.getElementById("modalConditionBig").textContent =
+            data.current.condition.text;
+
+          // TEMPERATURE, HUMIDITY, WIND
+          document.getElementById("modalTemperatureBig").textContent =
+            data.current.temp_c + "°C";
+          document.getElementById("modalHumidity").textContent =
+            data.current.humidity + "%";
+          document.getElementById("modalWindSpeed").textContent =
+            data.current.wind_mph + " mph";
+
+          const modal = new bootstrap.Modal(weatherModalEl);
+          modal.show();
+
+          return fetch(
+            `PHP/get_forecast.php?country=${encodeURIComponent(country)}`
+          );
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((dataForecast) => {
+          const today = dataForecast.daily[0];
+          document.querySelector("#modalForecastMorningTemp").textContent =
+            Math.round(today.temperature.morning) + "°C";
+          document.querySelector("#modalForecastAfternoonTemp").textContent =
+            Math.round(today.temperature.day) + "°C";
+          document.querySelector("#modalForecastEveningTemp").textContent =
+            Math.round(today.temperature.evening) + "°C";
+
+          document.querySelector("#modalForecastMorningIcon").src =
+            today.condition.icon_url;
+          document.querySelector("#modalForecastAfternoonIcon").src =
+            today.condition.icon_url;
+          document.querySelector("#modalForecastEveningIcon").src =
+            today.condition.icon_url;
+
+          document.querySelector("#modalForecastMorningCond").textContent =
+            today.condition.description;
+          document.querySelector("#modalForecastAfternoonCond").textContent =
+            today.condition.description;
+          document.querySelector("#modalForecastEveningCond").textContent =
+            today.condition.description;
+
+          // 1️⃣ Then render the rest of the 5-day below:
+          displayForecast(dataForecast);
+        })
+
+        .then(displayForecast)
+        .catch((err) => {
+          console.error("Weather error:", err);
+          // you could show an alert here if you like
+        });
+    }
+
+    function formatDay(ts) {
+      const d = new Date(ts * 1000),
+        days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      return days[d.getDay()];
+    }
+
+    function displayForecast(data) {
+      const container = document.querySelector("#forecast");
+      let html = "";
+
+      data.daily.forEach((day, i) => {
+        if (i >= 5) return;
+        const hi = Math.round(day.temperature.maximum),
+          lo = Math.round(day.temperature.minimum);
+
+        html += `
+      <div class="row">
+        <div class="col-2 text-center">
+          <div class="weather-forecast-date">${formatDay(day.time)}</div>
+          <img src="${day.condition.icon_url}"
+               class="weather-forecast-icon"
+               style="width:40px;height:40px">
+          <div class="weather-forecast-temp">
+            <span class="weather-forecast-max">${hi}°</span>
+            <span class="weather-forecast-min">${lo}°</span>
+          </div>
+        </div>
+      </div>`;
+      });
+
+      container.innerHTML = html;
+    }
 
     // FETCH AND DRAW COUNTRY BORDER GEOJSON
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
