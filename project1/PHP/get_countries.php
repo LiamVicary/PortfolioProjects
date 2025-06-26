@@ -15,4 +15,10 @@ foreach ($geo['features'] as $feat) {
     $out[] = ['iso'=>$p['iso_a2'], 'name'=>$p['name']];
   }
 }
+
+// Sort by country name, ascending
+usort($out, function($a, $b) {
+  return strcmp($a['name'], $b['name']);
+});
+
 echo json_encode($out, JSON_UNESCAPED_UNICODE);
