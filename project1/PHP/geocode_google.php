@@ -2,7 +2,7 @@
 // PHP/geocode_google.php
 header('Content-Type: application/json');
 
-$GOOGLE_API_KEY = 'AIzaSyAJf1NjVWza05W7vkIdQl_4b9SUUEgk8mM'; // Replace with your key
+$GOOGLE_API_KEY = 'AIzaSyAJf1NjVWza05W7vkIdQl_4b9SUUEgk8mM';
 
 if (isset($_GET['q'])) {
     $query = urlencode(trim($_GET['q']));
