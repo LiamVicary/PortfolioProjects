@@ -1,518 +1,400 @@
-// ---------------------------------------------------------
-// GLOBAL DECLARATIONS
-// ---------------------------------------------------------
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-var map;
+    <link rel="stylesheet" href="styles/index.css" />
 
-// tile layers
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css"
+    />
 
-var streets = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-  {
-    attribution:
-      "Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012",
-  }
-);
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
 
-var satellite = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-  {
-    attribution:
-      "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-  }
-);
+    <title>Project 1</title>
+  </head>
+  <body>
+    <span id="selectContainer">
+      <select id="countrySelect" class="form-select shadow-sm">
+        <!-- populate from an AJAX CALL to a PHP routine that returns a JSON object that is an array of just ISO codes and names from countryBorders.geo.json -->
+        <option value="">Select a country</option>
+      </select>
+    </span>
 
-var basemaps = {
-  Streets: streets,
-  Satellite: satellite,
-};
+    <div id="map"></div>
 
-// buttons
-// EXAMPLE MODAL
-var infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
-  $("#exampleModal").modal("show");
-});
+    <!-- example modal layout -->
 
-// WEATHER MODAL
-var weatherBtn = L.easyButton("fa-cloud-sun fa-xl", function (btn, map) {
-  $("#weatherModal").modal("show");
-});
+    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <span id="modalLocationName"></span>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-location-dot fa-xl text-success"></i>
+                </td>
 
-// CURRENCY MODAL
-var currencyBtn = L.easyButton("fa-coins fa-xl", function (btn, map) {
-  $("#currencyModal").modal("show");
-});
+                <td>Country:</td>
 
-// FLAG MODAL
-var flagBtn = L.easyButton("fa-flag fa-xl", function (btn, map) {
-  $("#flagModal").modal("show");
-});
+                <td class="text-end" id="modalCountryName">…</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-earth-americas fa-xl text-success"></i>
+                </td>
 
-// SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
+                <td>Region:</td>
 
-document.addEventListener("DOMContentLoaded", () => {
-  // INITIALISE MAP & LAYERS
+                <td class="text-end" id="modalRegion">Region</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-globe fa-xl text-success"></i>
+                </td>
 
-  map = L.map("map", {
-    layers: [streets],
-  }).setView([54.5, -4], 6);
+                <td>Coodinates</td>
 
-  L.control.layers(basemaps).addTo(map);
-  infoBtn.addTo(map);
-  weatherBtn.addTo(map);
-  currencyBtn.addTo(map);
-  flagBtn.addTo(map);
+                <td class="text-end" id="modalCoordinates">…</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-city fa-xl text-success"></i>
+                </td>
 
-  // POPULATE <select>
+                <td>Capital City</td>
 
-  const sel = document.getElementById("countrySelect");
-  if (!sel) {
-    console.error("No <select id='countrySelect'> found in the DOM.");
-    return;
-  }
+                <td class="text-end" id="modalCapitalCity">City Name</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-language fa-xl text-success"></i>
+                </td>
 
-  fetch("PHP/get_countries.php")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(
-          "get_countries.php returned HTTP " +
-            response.status +
-            " " +
-            response.statusText
-        );
-      }
-      return response.json();
-    })
-    .then((countries) => {
-      sel.innerHTML = "<option value=''>Select a country</option>";
+                <td>Main Language</td>
 
-      countries.forEach(({ iso, name }) => {
-        const opt = document.createElement("option");
-        opt.value = iso;
-        opt.textContent = name;
-        sel.appendChild(opt);
-      });
-      console.log("Loaded", countries.length, "countries into <select>.");
-    })
-    .catch((err) => {
-      console.error("Failed to load country list:", err);
-      sel.innerHTML = "<option disabled>Error loading countries</option>";
-    });
+                <td class="text-end" id="modalLanguage">Main Language</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-users fa-xl text-success"></i>
+                </td>
 
-  // --------------------------------------INFORMATION MODAL--------------------------------------
-  // FETCH BORDER + GEOCODE
+                <td>Country Population</td>
 
-  sel.addEventListener("change", (e) => {
-    const isoCode = e.target.value;
-    const countryName = sel.options[sel.selectedIndex].text;
-    if (!isoCode) {
-      console.warn("User selected the blank option; skipping.");
-      return;
-    }
-
-    // MODAL - REGION
-    console.log("User selected ISO =", isoCode, "name =", countryName);
-
-    fetch(`PHP/get_region.php?country=${encodeURIComponent(countryName)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(({ region }) => {
-        document.getElementById("modalRegion").textContent = region || "—";
-      })
-      .catch((err) => {
-        console.error("Failed to fetch region:", err);
-        document.getElementById("modalRegion").textContent = "Error";
-      });
-
-    // MODAL - CAPITAL CITY
-    console.log("User selected ISO =", isoCode, "name =", countryName);
-
-    fetch(`PHP/get_capital.php?country=${encodeURIComponent(countryName)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(({ capital }) => {
-        const capitalCity =
-          Array.isArray(capital) && capital.length ? capital[0] : null;
-        document.getElementById("modalCapitalCity").textContent =
-          capitalCity || "—";
-
-        if (!capitalCity) return;
-
-        // Geocode the capital city
-        fetch(
-          `PHP/geocode.php?q=${encodeURIComponent(
-            capitalCity + ", " + countryName
-          )}`
-        )
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          })
-          .then((geoData) => {
-            if (!geoData.results || geoData.results.length === 0) return;
-
-            const { lat, lng } = geoData.results[0].geometry;
-
-            // Remove old marker if any
-            if (window.capitalMarker) {
-              map.removeLayer(window.capitalMarker);
-            }
-
-            const capitalIcon = L.icon({
-              iconUrl: "images/capital-marker.png",
-              iconSize: [60, 60],
-              iconAnchor: [15, 40],
-              popupAnchor: [0, -35],
-            });
-
-            window.capitalMarker = L.marker([lat, lng], { icon: capitalIcon })
-              .addTo(map)
-              .bindPopup(
-                `<strong>${capitalCity}</strong><br>${lat.toFixed(
-                  4
-                )}, ${lng.toFixed(4)}`
-              );
-          })
-          .catch((err) => {
-            console.error("Failed to geocode capital city:", err);
-          });
-      })
-      .catch((err) => {
-        console.error("Failed to fetch capital:", err);
-        document.getElementById("modalCapitalCity").textContent = "Error";
-      });
-
-    // MODAL - LANGUAGES
-    console.log("User selected ISO =", isoCode, "name =", countryName);
-
-    fetch(`PHP/get_languages.php?country=${encodeURIComponent(countryName)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(({ languages }) => {
-        const firstLang = languages ? Object.values(languages)[0] : "—";
-        document.getElementById("modalLanguage").textContent = firstLang;
-      })
-      .catch((err) => {
-        console.error("Failed to fetch languages:", err);
-        document.getElementById("modalLanguage").textContent = "Error";
-      });
-
-    // MODAL - POPULATION
-    console.log("User selected ISO =", isoCode, "name =", countryName);
-
-    fetch(`PHP/get_population.php?country=${encodeURIComponent(countryName)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(({ population }) => {
-        const popText =
-          typeof population === "number" ? population.toLocaleString() : "—";
-
-        document.getElementById("modalCountryPopulation").textContent = popText;
-      })
-      .catch((err) => {
-        console.error("Failed to fetch population:", err);
-        document.getElementById("modalCountryPopulation").textContent = "Error";
-      });
-
-    // MODAL - FLAG
-    console.log("User selected ISO =", isoCode, "name =", countryName);
-
-    fetch(`PHP/get_flag.php?country=${encodeURIComponent(countryName)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(({ flag }) => {
-        const img = document.getElementById("modalFlagImage");
-        if (flag) {
-          img.src = flag;
-          img.alt = countryName + " flag";
-        } else {
-          img.src = "";
-          img.alt = "No flag available";
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch flag:", err);
-        const img = document.getElementById("modalFlagImage");
-        img.src = "";
-        img.alt = "Error loading flag";
-      });
-
-    // --------------------------------------WEATHER MODAL--------------------------------------
-
-    const countrySelect = document.querySelector("#countrySelect");
-    const weatherModalEl = document.querySelector("#weatherModal");
-
-    countrySelect.addEventListener("change", () => {
-      const idx = countrySelect.selectedIndex;
-      if (idx <= 0) return;
-      const country = countrySelect.options[idx].text;
-      fetchCurrentWeather(country);
-    });
-
-    function fetchCurrentWeather(country) {
-      fetch(
-        `PHP/get_current_weather.php?country=${encodeURIComponent(country)}`
-      )
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          // COUNTRY & DAY
-          document.getElementById(
-            "modalWeatherLocation"
-          ).textContent = `${data.location.country}`;
-          const local = data.location.localtime; // "YYYY-MM-DD hh:mm"
-          const dayName = new Date(local).toLocaleDateString("en-GB", {
-            weekday: "long",
-          });
-          document.getElementById("modalWeatherDay").textContent = dayName;
-
-          // ICONS & CONDITION
-          document.getElementById("modalWeatherIconBig").src =
-            data.current.condition.icon;
-          document.getElementById("modalConditionBig").textContent =
-            data.current.condition.text;
-
-          // TEMPERATURE, HUMIDITY, WIND
-          document.getElementById("modalTemperatureBig").textContent =
-            data.current.temp_c + "°C";
-          document.getElementById("modalHumidity").textContent =
-            data.current.humidity + "%";
-          document.getElementById("modalWindSpeed").textContent =
-            data.current.wind_mph + " mph";
-
-          const modal = new bootstrap.Modal(weatherModalEl);
-          modal.show();
-
-          return fetch(
-            `PHP/get_forecast.php?country=${encodeURIComponent(country)}`
-          );
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((dataForecast) => {
-          const today = dataForecast.daily[0];
-          document.querySelector("#modalForecastMorningTemp").textContent =
-            Math.round(today.temperature.morning) + "°C";
-          document.querySelector("#modalForecastAfternoonTemp").textContent =
-            Math.round(today.temperature.day) + "°C";
-          document.querySelector("#modalForecastEveningTemp").textContent =
-            Math.round(today.temperature.evening) + "°C";
-
-          document.querySelector("#modalForecastMorningIcon").src =
-            today.condition.icon_url;
-          document.querySelector("#modalForecastAfternoonIcon").src =
-            today.condition.icon_url;
-          document.querySelector("#modalForecastEveningIcon").src =
-            today.condition.icon_url;
-
-          document.querySelector("#modalForecastMorningCond").textContent =
-            today.condition.description;
-          document.querySelector("#modalForecastAfternoonCond").textContent =
-            today.condition.description;
-          document.querySelector("#modalForecastEveningCond").textContent =
-            today.condition.description;
-
-          // 1️⃣ Then render the rest of the 5-day below:
-          displayForecast(dataForecast);
-        })
-
-        .then(displayForecast)
-        .catch((err) => {
-          console.error("Weather error:", err);
-          // you could show an alert here if you like
-        });
-    }
-
-    function formatDay(ts) {
-      const d = new Date(ts * 1000),
-        days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      return days[d.getDay()];
-    }
-
-    function displayForecast(data) {
-      const container = document.querySelector("#forecast");
-      let html = "";
-
-      data.daily.forEach((day, i) => {
-        if (i >= 5) return;
-        const hi = Math.round(day.temperature.maximum),
-          lo = Math.round(day.temperature.minimum);
-
-        html += `
-      <div class="row">
-        <div class="col-2 text-center">
-          <div class="weather-forecast-date">${formatDay(day.time)}</div>
-          <img src="${day.condition.icon_url}"
-               class="weather-forecast-icon"
-               style="width:40px;height:40px">
-          <div class="weather-forecast-temp">
-            <span class="weather-forecast-max">${hi}°</span>
-            <span class="weather-forecast-min">${lo}°</span>
+                <td class="text-end" id="modalCountryPopulation">
+                  Country Population
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
           </div>
         </div>
-      </div>`;
-      });
+      </div>
+    </div>
 
-      container.innerHTML = html;
-    }
+    <!-- ________________________________________WEATHER MODAL________________________________________ -->
 
-    // FETCH AND DRAW COUNTRY BORDER GEOJSON
-    const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
-      isoCode
-    )}`;
-    console.log("Fetching border from:", borderUrl);
+    <div
+      id="weatherModal"
+      class="modal fade"
+      data-bs-backdrop="false"
+      tabindex="-1"
+      aria-labelledby="weatherModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <!-- header -->
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title" id="weatherModalLabel">Weather Forecast</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
 
-    fetch(borderUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(
-            "Border fetch failed: " + res.status + " " + res.statusText
-          );
-        }
-        return res.json();
-      })
-      .then((featureGeoJSON) => {
-        if (window.currentCountryLayer) {
-          map.removeLayer(window.currentCountryLayer);
-        }
-        window.currentCountryLayer = L.geoJSON(featureGeoJSON).addTo(map);
-        map.fitBounds(window.currentCountryLayer.getBounds());
-        console.log("Rendered border for", countryName);
-      })
-      .catch((err) => {
-        console.error("Failed to load border for", countryName, err);
-      });
+          <!-- body -->
+          <div class="modal-body">
+            <!-- Top row: location / big icon & temp / humidity & wind -->
+            <div class="row align-items-center mb-3">
+              <div class="col-auto">
+                <!-- Country + Day -->
+                <p id="modalWeatherLocation" class="mb-0">…</p>
+                <p id="modalWeatherDay" class="small text-muted">…</p>
+              </div>
+              <div class="col text-center">
+                <img
+                  id="modalWeatherIconBig"
+                  src=""
+                  alt="Weather Icon"
+                  style="width: 80px; height: 80px"
+                />
+                <h1 id="modalTemperatureBig" class="mb-0">…°C</h1>
+                <p id="modalConditionBig" class="small text-capitalize">…</p>
+              </div>
+              <div class="col-auto text-end">
+                <p class="mb-1">
+                  Humidity: <strong id="modalHumidity">…%</strong>
+                </p>
+                <p class="mb-0">
+                  Wind: <strong id="modalWindSpeed">… mph</strong>
+                </p>
+              </div>
+            </div>
 
-    // GEOCODE THE COUNTRY VIA OPENCAGE
+            <hr />
 
-    const phpGeocodeUrl = `PHP/geocode.php?q=${encodeURIComponent(
-      countryName
-    )}`;
+            <!-- Mid row: Morning / Afternoon / Evening -->
+            <div class="row text-center mb-3">
+              <div class="col">
+                <h6 class="mb-2">Morning</h6>
+                <img
+                  id="modalForecastMorningIcon"
+                  src=""
+                  alt="Morning icon"
+                  style="width: 40px; height: 40px"
+                />
+                <p id="modalForecastMorningTemp" class="mb-1">No Data</p>
+                <p id="modalForecastMorningCond" class="small">No Data</p>
+              </div>
+              <div class="col">
+                <h6 class="mb-2">Afternoon</h6>
+                <img
+                  id="modalForecastAfternoonIcon"
+                  src=""
+                  alt="Afternoon icon"
+                  style="width: 40px; height: 40px"
+                />
+                <p id="modalForecastAfternoonTemp" class="mb-1">No Data</p>
+                <p id="modalForecastAfternoonCond" class="small">No Data</p>
+              </div>
+              <div class="col">
+                <h6 class="mb-2">Evening</h6>
+                <img
+                  id="modalForecastEveningIcon"
+                  src=""
+                  alt="Evening icon"
+                  style="width: 40px; height: 40px"
+                />
+                <p id="modalForecastEveningTemp" class="mb-1">No Data</p>
+                <p id="modalForecastEveningCond" class="small">No Data</p>
+              </div>
+            </div>
 
-    fetch(phpGeocodeUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(
-            "Proxy geocode failed: " + res.status + " " + res.statusText
-          );
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (!data.results || data.results.length === 0) {
-          console.warn("Proxy returned no results for", countryName, data);
-          return;
-        }
+            <hr />
 
-        const { lat, lng } = data.results[0].geometry;
-        console.log(`Geocoded ${countryName} → lat=${lat}, lng=${lng}`);
+            <!-- Bottom row: Next three days -->
+            <div class="row text-center">
+              <div class="col">
+                <p class="mb-1">
+                  <span id="modalForecastDay1Name">Day</span>
+                  <span id="modalForecastDay1Date">Date</span>
+                </p>
+                <img
+                  id="modalForecastDay1Icon"
+                  src=""
+                  alt="Day 1 icon"
+                  style="width: 30px; height: 30px"
+                />
+                <p class="mb-0">
+                  <strong id="modalForecastDay1High">-°</strong>
+                  <small>/</small>
+                  <strong id="modalForecastDay1Low">-°</strong>
+                </p>
+              </div>
+              <div class="col">
+                <p class="mb-1">
+                  <span id="modalForecastDay2Name">Day</span>
+                  <span id="modalForecastDay2Date">Date</span>
+                </p>
+                <img
+                  id="modalForecastDay2Icon"
+                  src=""
+                  alt="Day 2 icon"
+                  style="width: 30px; height: 30px"
+                />
+                <p class="mb-0">
+                  <strong id="modalForecastDay2High">-°</strong>
+                  <small>/</small>
+                  <strong id="modalForecastDay2Low">-°</strong>
+                </p>
+              </div>
+              <div class="col">
+                <p class="mb-1">
+                  <span id="modalForecastDay3Name">Day</span>
+                  <span id="modalForecastDay3Date">Date</span>
+                </p>
+                <img
+                  id="modalForecastDay3Icon"
+                  src=""
+                  alt="Day 3 icon"
+                  style="width: 30px; height: 30px"
+                />
+                <p class="mb-0">
+                  <strong id="modalForecastDay3High">-°</strong>
+                  <small>/</small>
+                  <strong id="modalForecastDay3Low">-°</strong>
+                </p>
+              </div>
+            </div>
+          </div>
 
-        if (window.geocodeMarker) {
-          map.removeLayer(window.geocodeMarker);
-        }
-        window.geocodeMarker = L.marker([lat, lng]).addTo(map);
+          <!-- footer -->
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        window.geocodeMarker
-          .bindPopup(`${countryName}: [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
-          .openPopup();
-        map.setView([lat, lng], 5);
+    <!-- ________________________________________CURRENCY MODAL________________________________________ -->
 
-        document.getElementById("modalCountryName").textContent = countryName;
-        document.getElementById(
-          "modalCoordinates"
-        ).textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    <div
+      id="currencyModal"
+      class="modal"
+      data-bs-backdrop="false"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-info bg-gradient text-white">
+            <h5 class="modal-title">Currency Calculator</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <span id="modalOtherLocationName"></span>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <!-- just an example icon change -->
+                  <i class="fa-solid fa-sterling-sign fa-xl text-info"></i>
+                </td>
+                <td>GBP:</td>
+                <td class="text-end" id="modalCurrency">…</td>
+              </tr>
+              <!-- add more rows as you like -->
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        $("#exampleModal").modal("show");
-      })
-      .catch((err) => {
-        console.error("Failed to geocode via proxy for", countryName, err);
-      });
+    <!-- ________________________________________FLAG MODAL________________________________________ -->
 
-    map.on("click", function (e) {
-      const { lat, lng } = e.latlng;
-      const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
+    <div id="flagModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-info bg-gradient text-white">
+            <h5 class="modal-title">Country Flag</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <span id="modalOtherLocationName"></span>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <img
+                    id="modalFlagImage"
+                    src=""
+                    alt="Country flag"
+                    style="max-width: 400px"
+                  />
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      fetch(phpReverseUrl)
-        .then((res) => {
-          if (!res.ok) throw new Error(res.status + " " + res.statusText);
-          return res.json();
-        })
-        .then((data) => {
-          if (data && data.results && data.results.length > 0) {
-            const place = data.results[0].formatted;
-            L.popup()
-              .setLatLng([lat, lng])
-              .setContent(
-                `You clicked at ${lat.toFixed(4)}, ${lng.toFixed(
-                  4
-                )}<br>Address: ${place}`
-              )
-              .openOn(map);
-          } else {
-            console.warn("No reverse‐geocode result", data);
-          }
-        })
-        .catch((err) => console.error("Reverse geocode error:", err));
-    });
-  });
-
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (window.userMarker) {
-          map.removeLayer(window.userMarker);
-        }
-        window.userMarker = L.marker([lat, lng], {
-          icon: L.icon({
-            //Custom icon goes here
-          }),
-        })
-          .addTo(map)
-          .bindPopup("You are here")
-          .openPopup();
-
-        map.setView([lat, lng], 10);
-
-        //Reverse‐geocode to get a human‐readable address
-        const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
-        fetch(phpReverseUrl)
-          .then((res) => {
-            if (!res.ok) throw new Error(res.status + " " + res.statusText);
-            return res.json();
-          })
-          .then((data) => {
-            if (data.results && data.results.length > 0) {
-              const place = data.results[0].formatted;
-              document.getElementById("modalLocationName").textContent = place;
-              window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
-            }
-          })
-          .catch((err) =>
-            console.error("Reverse geocode (user location) error:", err)
-          );
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-      }
-    );
-  } else {
-    console.warn("Geolocation not available in this browser");
-  }
-});
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>
