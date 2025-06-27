@@ -58,6 +58,21 @@ var flagBtn = L.easyButton("fa-flag fa-xl", function (btn, map) {
 // SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("🔥 index.js loaded");
+
+  // 1️⃣ Quick test: hit your PHP proxy directly and dump the response
+  (async function debugCurrencyProxy() {
+    try {
+      console.log("→ Fetching PHP/currencies_proxy.php …");
+      const resp = await fetch("PHP/currencies_proxy.php");
+      console.log("← status:", resp.status);
+      const text = await resp.text();
+      console.log("← body:", text);
+    } catch (err) {
+      console.error("‼️ proxy fetch error:", err);
+    }
+  })();
+
   // INITIALISE MAP & LAYERS
 
   map = L.map("map", {
@@ -602,130 +617,7 @@ document.addEventListener("DOMContentLoaded", () => {
         img.alt = "Error loading flag";
       });
 
-    // --------------------------------------WEATHER MODAL--------------------------------------
-
-    const countrySelect = document.querySelector("#countrySelect");
-    const weatherModalEl = document.querySelector("#weatherModal");
-
-    countrySelect.addEventListener("change", () => {
-      const idx = countrySelect.selectedIndex;
-      if (idx <= 0) return;
-      const country = countrySelect.options[idx].text;
-      fetchCurrentWeather(country);
-    });
-
-    function fetchCurrentWeather(country) {
-      fetch(
-        `PHP/get_current_weather.php?country=${encodeURIComponent(country)}`
-      )
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          // COUNTRY & DAY
-          document.getElementById(
-            "modalWeatherLocation"
-          ).textContent = `${data.location.country}`;
-          const local = data.location.localtime; // "YYYY-MM-DD hh:mm"
-          const dayName = new Date(local).toLocaleDateString("en-GB", {
-            weekday: "long",
-          });
-          document.getElementById("modalWeatherDay").textContent = dayName;
-
-          // ICONS & CONDITION
-          document.getElementById("modalWeatherIconBig").src =
-            data.current.condition.icon;
-          document.getElementById("modalConditionBig").textContent =
-            data.current.condition.text;
-
-          // TEMPERATURE, HUMIDITY, WIND
-          document.getElementById("modalTemperatureBig").textContent =
-            data.current.temp_c + "°C";
-          document.getElementById("modalHumidity").textContent =
-            data.current.humidity + "%";
-          document.getElementById("modalWindSpeed").textContent =
-            data.current.wind_mph + " mph";
-
-          const modal = new bootstrap.Modal(weatherModalEl);
-          modal.show();
-
-          return fetch(
-            `PHP/get_forecast.php?country=${encodeURIComponent(country)}`
-          );
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((dataForecast) => {
-          const today = dataForecast.daily[0];
-          document.querySelector("#modalForecastMorningTemp").textContent =
-            Math.round(today.temperature.morning) + "°C";
-          document.querySelector("#modalForecastAfternoonTemp").textContent =
-            Math.round(today.temperature.day) + "°C";
-          document.querySelector("#modalForecastEveningTemp").textContent =
-            Math.round(today.temperature.evening) + "°C";
-
-          document.querySelector("#modalForecastMorningIcon").src =
-            today.condition.icon_url;
-          document.querySelector("#modalForecastAfternoonIcon").src =
-            today.condition.icon_url;
-          document.querySelector("#modalForecastEveningIcon").src =
-            today.condition.icon_url;
-
-          document.querySelector("#modalForecastMorningCond").textContent =
-            today.condition.description;
-          document.querySelector("#modalForecastAfternoonCond").textContent =
-            today.condition.description;
-          document.querySelector("#modalForecastEveningCond").textContent =
-            today.condition.description;
-
-          // 1️⃣ Then render the rest of the 5-day below:
-          displayForecast(dataForecast);
-        })
-
-        .then(displayForecast)
-        .catch((err) => {
-          console.error("Weather error:", err);
-          // you could show an alert here if you like
-        });
-    }
-
-    function formatDay(ts) {
-      const d = new Date(ts * 1000),
-        days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      return days[d.getDay()];
-    }
-
-    function displayForecast(data) {
-      const container = document.querySelector("#forecast");
-      let html = "";
-
-      data.daily.forEach((day, i) => {
-        if (i >= 5) return;
-        const hi = Math.round(day.temperature.maximum),
-          lo = Math.round(day.temperature.minimum);
-
-        html += `
-      <div class="row">
-        <div class="col-2 text-center">
-          <div class="weather-forecast-date">${formatDay(day.time)}</div>
-          <img src="${day.condition.icon_url}"
-               class="weather-forecast-icon"
-               style="width:40px;height:40px">
-          <div class="weather-forecast-temp">
-            <span class="weather-forecast-max">${hi}°</span>
-            <span class="weather-forecast-min">${lo}°</span>
-          </div>
-        </div>
-      </div>`;
-      });
-
-      container.innerHTML = html;
-    }
-
-    // FETCH AND DRAW COUNTRY BORDER GEOJSON
+    // --------------------------------------FETCH AND DRAW COUNTRY BORDER GEOJSON--------------------------------------
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
       isoCode
     )}`;
@@ -822,6 +714,251 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((err) => console.error("Reverse geocode error:", err));
+    });
+
+    // --------------------------------------WEATHER MODAL--------------------------------------
+
+    /* Updated Weather Modal JS */
+    const countrySelect = document.querySelector("#countrySelect");
+    const weatherModalEl = document.querySelector("#weatherModal");
+
+    // Fetch when user changes country
+    countrySelect.addEventListener("change", () => {
+      const idx = countrySelect.selectedIndex;
+      if (idx <= 0) return;
+      const country = countrySelect.options[idx].text;
+      fetchCurrentWeather(country);
+    });
+
+    // Also fetch on modal open for already-selected country
+    $(weatherModalEl).on("show.bs.modal", () => {
+      const idx = countrySelect.selectedIndex;
+      if (idx > 0) {
+        const country = countrySelect.options[idx].text;
+        fetchCurrentWeather(country);
+      }
+    });
+
+    function fetchCurrentWeather(country) {
+      // Current weather
+      fetch(
+        `PHP/get_current_weather.php?country=${encodeURIComponent(country)}`
+      )
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          // Top row: country, day
+          document.getElementById("modalWeatherLocation").textContent =
+            data.location.country;
+          const local = data.location.localtime; // "YYYY-MM-DD hh:mm"
+          const dayName = new Date(local).toLocaleDateString("en-GB", {
+            weekday: "long",
+          });
+          document.getElementById("modalWeatherDay").textContent = dayName;
+
+          // Icons & condition
+          document.getElementById("modalWeatherIconBig").src =
+            data.current.condition.icon;
+          document.getElementById("modalConditionBig").textContent =
+            data.current.condition.text;
+
+          // Temperature, humidity, wind
+          document.getElementById(
+            "modalTemperatureBig"
+          ).textContent = `${data.current.temp_c}°C`;
+          document.getElementById(
+            "modalHumidity"
+          ).textContent = `${data.current.humidity}%`;
+          document.getElementById(
+            "modalWindSpeed"
+          ).textContent = `${data.current.wind_mph} mph`;
+
+          // Show the modal after updating top row
+          const modal = new bootstrap.Modal(weatherModalEl);
+          modal.show();
+
+          // Fetch forecast
+          return fetch(
+            `PHP/get_forecast.php?country=${encodeURIComponent(country)}`
+          );
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((forecastData) => {
+          // WeatherAPI returns forecast.forecastday array
+          const days = forecastData.forecast.forecastday;
+          const today = days[0].day;
+
+          // Mid row: morning, afternoon, evening
+          document.querySelector(
+            "#modalForecastMorningTemp"
+          ).textContent = `${Math.round(today.mintemp_c)}°C`;
+          document.querySelector(
+            "#modalForecastAfternoonTemp"
+          ).textContent = `${Math.round(today.maxtemp_c)}°C`;
+          document.querySelector(
+            "#modalForecastEveningTemp"
+          ).textContent = `${Math.round(today.maxtemp_c)}°C`;
+
+          document.querySelector("#modalForecastMorningIcon").src =
+            today.condition.icon;
+          document.querySelector("#modalForecastAfternoonIcon").src =
+            today.condition.icon;
+          document.querySelector("#modalForecastEveningIcon").src =
+            today.condition.icon;
+
+          document.querySelector("#modalForecastMorningCond").textContent =
+            today.condition.text;
+          document.querySelector("#modalForecastAfternoonCond").textContent =
+            today.condition.text;
+          document.querySelector("#modalForecastEveningCond").textContent =
+            today.condition.text;
+
+          // Bottom row: next three days
+          for (let i = 1; i <= 3; i++) {
+            const d = days[i];
+            const dateStr = d.date; // "YYYY-MM-DD"
+            const dayNameShort = new Date(dateStr).toLocaleDateString("en-GB", {
+              weekday: "short",
+            });
+
+            document.getElementById(`modalForecastDay${i}Name`).textContent =
+              dayNameShort;
+            document.getElementById(`modalForecastDay${i}Date`).textContent =
+              dateStr;
+            document.getElementById(`modalForecastDay${i}Icon`).src =
+              d.day.condition.icon;
+            document.getElementById(
+              `modalForecastDay${i}High`
+            ).textContent = `${Math.round(d.day.maxtemp_c)}°`;
+            document.getElementById(
+              `modalForecastDay${i}Low`
+            ).textContent = `${Math.round(d.day.mintemp_c)}°`;
+          }
+        })
+        .catch((err) => console.error("Weather error:", err));
+    }
+
+    // --------------------------------------CURRENCY MODAL--------------------------------------
+
+    document.addEventListener("change", () => {
+      // 1) Grab the DOM elements first
+      const currencyModalEl = document.getElementById("currencyModal");
+      const fromSelect = document.getElementById("fromCurrency");
+      const toSelect = document.getElementById("toCurrency");
+      const resultEl = document.getElementById("conversionResult");
+
+      // 2) Helper to detect the user's local currency via OpenCage reverse-geocode
+      async function getUserCurrency() {
+        if (!navigator.geolocation) return "USD";
+        return new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const { latitude: lat, longitude: lng } = pos.coords;
+              const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
+              const data = await res.json();
+              const iso = data?.results?.[0]?.annotations?.currency?.iso_code;
+              resolve(iso || "USD");
+            },
+            () => resolve("USD")
+          );
+        });
+      }
+
+      // 3) Populate the two <select> controls from exchangerate.host/symbols
+      async function populateCurrencySelects() {
+        fromSelect.innerHTML = ""; // clear any old options
+        toSelect.innerHTML = "";
+
+        const userCurr = await getUserCurrency();
+        const res = await fetch("PHP/currencies_proxy.php");
+        const data = await res.json();
+
+        if (!data.symbols) {
+          console.error("Unexpected response from symbols API:", data);
+          return;
+        }
+
+        Object.entries(data.symbols).forEach(([code, { description }]) => {
+          const label = `${code} — ${description}`;
+          fromSelect.append(new Option(label, code));
+          toSelect.append(new Option(label, code));
+        });
+
+        fromSelect.value = "USD";
+        toSelect.value = userCurr;
+      }
+
+      // 4) Wire up the Bootstrap show event _after_ we've got the element & fn
+      currencyModalEl.addEventListener(
+        "show.bs.modal",
+        populateCurrencySelects
+      );
+
+      // 5) And wire up your submit handler
+      document
+        .getElementById("currencyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const amount = +document.getElementById("inputAmount").value;
+          const from = fromSelect.value;
+          const to = toSelect.value;
+          const res = await fetch(
+            `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
+          );
+          const { result } = await res.json();
+          if (result != null) {
+            resultEl.textContent = `${amount} ${from} = ${result.toFixed(
+              2
+            )} ${to}`;
+          } else {
+            resultEl.textContent = "Conversion failed";
+          }
+        });
+
+      // 1) jQuery‐style event binding for the modal
+      $("#currencyModal").on("show.bs.modal", async function () {
+        console.log("currencyModal show.bs.modal fired");
+        await populateCurrencySelects();
+      });
+
+      // 2) Add logging inside populateCurrencySelects
+      async function populateCurrencySelects() {
+        fromSelect.innerHTML = "";
+        toSelect.innerHTML = "";
+        console.log("→ populating currency selects…");
+
+        const userCurr = await getUserCurrency();
+        console.log("→ detected user currency:", userCurr);
+
+        let data;
+        try {
+          const res = await fetch("PHP/currencies_proxy.php");
+          data = await res.json();
+        } catch (err) {
+          console.error("⚠️ fetch error:", err);
+          return;
+        }
+        console.log("→ symbols API returned:", data);
+
+        if (!data.symbols) {
+          console.error("⚠️ missing data.symbols");
+          return;
+        }
+
+        Object.entries(data.symbols).forEach(([code, { description }]) => {
+          const label = `${code} – ${description}`;
+          fromSelect.append(new Option(label, code));
+          toSelect.append(new Option(label, code));
+        });
+
+        fromSelect.value = "USD";
+        toSelect.value = userCurr;
+      }
     });
   });
 
