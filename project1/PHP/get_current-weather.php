@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-$key = 'e54b2d61f9044b96a86161010252006';
+$key = 'c12fc719ba194000bb0113820252706';
 
 if (!isset($_GET['country']) || trim($_GET['country']) === '') {
   http_response_code(400);
