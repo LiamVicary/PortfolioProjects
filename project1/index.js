@@ -819,26 +819,40 @@ document.addEventListener("DOMContentLoaded", () => {
             today.condition.text;
 
           // Bottom row: next three days
-          for (let i = 1; i <= 3; i++) {
-            const d = days[i];
-            const dateStr = d.date; // "YYYY-MM-DD"
+          days.slice(1, 4).forEach((d, idx) => {
+            if (!d) return; // no day object? skip
+            const slot = idx + 1; // 1,2,3
+
+            // 1) compute date & name
+            const dateStr = d.date;
             const dayNameShort = new Date(dateStr).toLocaleDateString("en-GB", {
               weekday: "short",
             });
 
-            document.getElementById(`modalForecastDay${i}Name`).textContent =
-              dayNameShort;
-            document.getElementById(`modalForecastDay${i}Date`).textContent =
-              dateStr;
-            document.getElementById(`modalForecastDay${i}Icon`).src =
-              d.day.condition.icon;
-            document.getElementById(
-              `modalForecastDay${i}High`
-            ).textContent = `${Math.round(d.day.maxtemp_c)}°`;
-            document.getElementById(
-              `modalForecastDay${i}Low`
-            ).textContent = `${Math.round(d.day.mintemp_c)}°`;
-          }
+            // 2) update elements, but only if they exist
+            const nameEl = document.getElementById(
+              `modalForecastDay${slot}Name`
+            );
+            if (nameEl) nameEl.textContent = dayNameShort;
+
+            const dateEl = document.getElementById(
+              `modalForecastDay${slot}Date`
+            );
+            if (dateEl) dateEl.textContent = dateStr;
+
+            const iconEl = document.getElementById(
+              `modalForecastDay${slot}Icon`
+            );
+            if (iconEl) iconEl.src = d.day.condition.icon;
+
+            const highEl = document.getElementById(
+              `modalForecastDay${slot}High`
+            );
+            if (highEl) highEl.textContent = `${Math.round(d.day.maxtemp_c)}°`;
+
+            const lowEl = document.getElementById(`modalForecastDay${slot}Low`);
+            if (lowEl) lowEl.textContent = `${Math.round(d.day.mintemp_c)}°`;
+          });
         })
         .catch((err) => console.error("Weather error:", err));
     }
