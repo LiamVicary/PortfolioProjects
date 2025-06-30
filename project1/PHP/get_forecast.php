@@ -8,9 +8,10 @@ if (!isset($_GET['country']) || trim($_GET['country']) === '') {
   exit;
 }
 
-$q = rawurlencode(trim($_GET['country']));
+$q   = rawurlencode(trim($_GET['country']));
+$days = 4; // today + next 3 days
 $url = "https://api.weatherapi.com/v1/forecast.json"
-     . "?key={$key}&q={$q}&aqi=no";
+     . "?key={$key}&q={$q}&days={$days}&aqi=no";
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
