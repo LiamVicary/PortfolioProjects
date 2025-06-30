@@ -121,6 +121,90 @@ document.addEventListener("DOMContentLoaded", () => {
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
 
+  // --------------------------------------CURRENCY MODAL--------------------------------------
+
+  const currencyModalEl = document.getElementById("currencyModal");
+  const fromSelect = document.getElementById("fromCurrency");
+  const toSelect = document.getElementById("toCurrency");
+  console.log("fromSelect:", fromSelect, "toSelect:", toSelect);
+  const amountInput = document.getElementById("inputAmount");
+  const resultEl = document.getElementById("conversionResult");
+
+  // 1) detect user currency
+  async function getUserCurrency() {
+    if (!navigator.geolocation) return "USD";
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
+          const data = await res.json();
+          resolve(data?.results?.[0]?.annotations?.currency?.iso_code || "USD");
+        },
+        () => resolve("USD")
+      );
+    });
+  }
+
+  // 2) populate both <select>s
+  async function populateCurrencySelects() {
+    console.log("▶ populateCurrencySelects fired");
+    fromSelect.innerHTML = "";
+    toSelect.innerHTML = "";
+    const userCurr = await getUserCurrency();
+    const res = await fetch("PHP/currencies_proxy.php");
+    const data = await res.json();
+
+    // Check if the API call was successful
+    if (!data.success) {
+      console.error("Symbols API returned", data);
+      // Handle the error appropriately, e.g., display a message to the user
+      return;
+    }
+
+    // Rest of the code to populate the selects
+    if (!data.currencies) {
+      console.error("Symbols API returned", data);
+      return;
+    }
+    Object.entries(data.currencies).forEach(([code, fullName]) => {
+      const label = `${code} — ${fullName}`;
+      fromSelect.append(new Option(label, code));
+      toSelect.append(new Option(label, code));
+    });
+
+    fromSelect.value = "GBP";
+    toSelect.value = userCurr;
+  }
+
+  // 3) when modal is shown, fill the dropdowns
+  currencyModalEl.addEventListener("show.bs.modal", populateCurrencySelects);
+
+  // 4) on form submit, do the conversion
+  document
+    .getElementById("currencyForm")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const amount = +amountInput.value;
+      const from = fromSelect.value;
+      const to = toSelect.value;
+      try {
+        const res = await fetch(
+          `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
+        );
+        const { result } = await res.json();
+        if (result != null) {
+          resultEl.textContent = `${amount} ${from} = ${result.toFixed(
+            2
+          )} ${to}`;
+        } else {
+          resultEl.textContent = "Conversion failed";
+        }
+      } catch (err) {
+        resultEl.textContent = "Error";
+        console.error(err);
+      }
+    });
   // --------------------------------------INFORMATION MODAL--------------------------------------
   // FETCH BORDER + GEOCODE
 
@@ -617,6 +701,44 @@ document.addEventListener("DOMContentLoaded", () => {
         img.alt = "Error loading flag";
       });
 
+    // MODAL CURRENCY
+    // assume `countryName` is the full name from the <select>
+    fetch(
+      `PHP/get_currency_rest.php?country=${encodeURIComponent(countryName)}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const td = document.getElementById("modalCountryCurrency");
+        if (data.symbol && data.name) {
+          td.textContent = `${data.symbol} — ${data.name}`;
+        } else {
+          td.textContent = "—";
+          console.error("Currency lookup failed", data.error);
+        }
+      })
+      .catch((err) => {
+        document.getElementById("modalCountryCurrency").textContent = "Error";
+        console.error("Fetch error:", err);
+      });
+
+    // MODAL BORDERING COUNTRIES
+    fetch(`PHP/get_borders.php?country=${encodeURIComponent(countryName)}`)
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status))
+      )
+      .then((data) => {
+        const cell = document.getElementById("modalCountryBorders");
+        if (Array.isArray(data.borders) && data.borders.length) {
+          cell.textContent = data.borders.join(", ");
+        } else {
+          cell.textContent = "None";
+        }
+      })
+      .catch((err) => {
+        console.error("Borders lookup failed:", err);
+        document.getElementById("modalCountryBorders").textContent = "Error";
+      });
+
     // --------------------------------------FETCH AND DRAW COUNTRY BORDER GEOJSON--------------------------------------
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
       isoCode
@@ -856,124 +978,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch((err) => console.error("Weather error:", err));
     }
-
-    // --------------------------------------CURRENCY MODAL--------------------------------------
-
-    document.addEventListener("change", () => {
-      // 1) Grab the DOM elements first
-      const currencyModalEl = document.getElementById("currencyModal");
-      const fromSelect = document.getElementById("fromCurrency");
-      const toSelect = document.getElementById("toCurrency");
-      const resultEl = document.getElementById("conversionResult");
-
-      // 2) Helper to detect the user's local currency via OpenCage reverse-geocode
-      async function getUserCurrency() {
-        if (!navigator.geolocation) return "USD";
-        return new Promise((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-              const { latitude: lat, longitude: lng } = pos.coords;
-              const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
-              const data = await res.json();
-              const iso = data?.results?.[0]?.annotations?.currency?.iso_code;
-              resolve(iso || "USD");
-            },
-            () => resolve("USD")
-          );
-        });
-      }
-
-      // 3) Populate the two <select> controls from exchangerate.host/symbols
-      async function populateCurrencySelects() {
-        fromSelect.innerHTML = ""; // clear any old options
-        toSelect.innerHTML = "";
-
-        const userCurr = await getUserCurrency();
-        const res = await fetch("PHP/currencies_proxy.php");
-        const data = await res.json();
-
-        if (!data.symbols) {
-          console.error("Unexpected response from symbols API:", data);
-          return;
-        }
-
-        Object.entries(data.symbols).forEach(([code, { description }]) => {
-          const label = `${code} — ${description}`;
-          fromSelect.append(new Option(label, code));
-          toSelect.append(new Option(label, code));
-        });
-
-        fromSelect.value = "USD";
-        toSelect.value = userCurr;
-      }
-
-      // 4) Wire up the Bootstrap show event _after_ we've got the element & fn
-      currencyModalEl.addEventListener(
-        "show.bs.modal",
-        populateCurrencySelects
-      );
-
-      // 5) And wire up your submit handler
-      document
-        .getElementById("currencyForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const amount = +document.getElementById("inputAmount").value;
-          const from = fromSelect.value;
-          const to = toSelect.value;
-          const res = await fetch(
-            `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
-          );
-          const { result } = await res.json();
-          if (result != null) {
-            resultEl.textContent = `${amount} ${from} = ${result.toFixed(
-              2
-            )} ${to}`;
-          } else {
-            resultEl.textContent = "Conversion failed";
-          }
-        });
-
-      // 1) jQuery‐style event binding for the modal
-      $("#currencyModal").on("show.bs.modal", async function () {
-        console.log("currencyModal show.bs.modal fired");
-        await populateCurrencySelects();
-      });
-
-      // 2) Add logging inside populateCurrencySelects
-      async function populateCurrencySelects() {
-        fromSelect.innerHTML = "";
-        toSelect.innerHTML = "";
-        console.log("→ populating currency selects…");
-
-        const userCurr = await getUserCurrency();
-        console.log("→ detected user currency:", userCurr);
-
-        let data;
-        try {
-          const res = await fetch("PHP/currencies_proxy.php");
-          data = await res.json();
-        } catch (err) {
-          console.error("⚠️ fetch error:", err);
-          return;
-        }
-        console.log("→ symbols API returned:", data);
-
-        if (!data.symbols) {
-          console.error("⚠️ missing data.symbols");
-          return;
-        }
-
-        Object.entries(data.symbols).forEach(([code, { description }]) => {
-          const label = `${code} – ${description}`;
-          fromSelect.append(new Option(label, code));
-          toSelect.append(new Option(label, code));
-        });
-
-        fromSelect.value = "USD";
-        toSelect.value = userCurr;
-      }
-    });
   });
 
   if ("geolocation" in navigator) {
