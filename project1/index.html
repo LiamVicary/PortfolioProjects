@@ -117,6 +117,24 @@
                   Country Population
                 </td>
               </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-wallet fa-xl text-success"></i>
+                </td>
+
+                <td>Currency</td>
+
+                <td class="text-end" id="modalCountryCurrency">Currency</td>
+              </tr>
+              <!--Modal Row-->
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-border-all fa-xl text-success"></i>
+                </td>
+                <td>Borders</td>
+                <td class="text-end" id="modalCountryBorders">—</td>
+              </tr>
             </table>
           </div>
           <div class="modal-footer">
@@ -229,7 +247,7 @@
 
             <!-- Bottom row: Next three days -->
             <div class="row text-center">
-              <div class="col">
+              <div class="col" id="modalForecastDay1">
                 <p class="mb-1">
                   <span id="modalForecastDay1Name">Day</span>
                   <span id="modalForecastDay1Date">Date</span>
@@ -246,7 +264,7 @@
                   <strong id="modalForecastDay1Low">-°</strong>
                 </p>
               </div>
-              <div class="col">
+              <div class="col" id="modalForecastDay2">
                 <p class="mb-1">
                   <span id="modalForecastDay2Name">Day</span>
                   <span id="modalForecastDay2Date">Date</span>
@@ -263,7 +281,7 @@
                   <strong id="modalForecastDay2Low">-°</strong>
                 </p>
               </div>
-              <div class="col">
+              <div class="col" id="modalForecastDay3">
                 <p class="mb-1">
                   <span id="modalForecastDay3Name">Day</span>
                   <span id="modalForecastDay3Date">Date</span>
@@ -316,21 +334,57 @@
               aria-label="Close"
             ></button>
           </div>
-          <span id="modalOtherLocationName"></span>
-          <div class="modal-body">
-            <table class="table table-striped">
-              <tr>
-                <td class="text-center">
-                  <!-- just an example icon change -->
-                  <i class="fa-solid fa-sterling-sign fa-xl text-info"></i>
-                </td>
-                <td>GBP:</td>
-                <td class="text-end" id="modalCurrency">…</td>
-              </tr>
-              <!-- add more rows as you like -->
-            </table>
+
+          <!-- we show the line “1 USD = … EUR” here -->
+          <div class="px-3 pt-2">
+            <small id="modalOtherLocationName" class="text-muted"></small>
           </div>
+
+          <div class="modal-body">
+            <!-- wrap in a form so your JS can catch the submit -->
+            <form id="currencyForm">
+              <div class="row g-2 align-items-end">
+                <div class="col-4">
+                  <label for="inputAmount" class="form-label">Amount</label>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="inputAmount"
+                    value="1"
+                    min="0"
+                    step="any"
+                  />
+                </div>
+                <div class="col-4">
+                  <label for="fromCurrency" class="form-label">From</label>
+                  <select id="fromCurrency" class="form-select form-select-sm">
+                    <!-- JS will populate -->
+                  </select>
+                </div>
+                <div class="col-4">
+                  <label for="toCurrency" class="form-label">To</label>
+                  <select id="toCurrency" class="form-select form-select-sm">
+                    <!-- JS will populate -->
+                  </select>
+                </div>
+              </div>
+
+              <!-- result row -->
+              <div class="mt-3 text-center">
+                <h6 id="conversionResult">…</h6>
+              </div>
+            </form>
+          </div>
+
           <div class="modal-footer">
+            <!-- no need for an extra “convert” button; submit on Enter or add a button here -->
+            <button
+              type="submit"
+              form="currencyForm"
+              class="btn btn-info btn-sm"
+            >
+              Convert
+            </button>
             <button
               type="button"
               class="btn btn-outline-info btn-sm"
