@@ -897,10 +897,6 @@ document.addEventListener("DOMContentLoaded", () => {
             "modalWindSpeed"
           ).textContent = `${data.current.wind_mph} mph`;
 
-          // Show the modal after updating top row
-          const modal = new bootstrap.Modal(weatherModalEl);
-          modal.show();
-
           // Fetch forecast
           return fetch(
             `PHP/get_forecast.php?country=${encodeURIComponent(country)}`
