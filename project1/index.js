@@ -55,6 +55,11 @@ var flagBtn = L.easyButton("fa-flag fa-xl", function (btn, map) {
   $("#flagModal").modal("show");
 });
 
+// NEWS MODAL
+var newsBtn = L.easyButton("fa-newspaper fa-xl", function (btn, map) {
+  $("#newsModal").modal("show");
+});
+
 // SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -84,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   weatherBtn.addTo(map);
   currencyBtn.addTo(map);
   flagBtn.addTo(map);
+  newsBtn.addTo(map);
 
   // POPULATE <select>
 
@@ -974,6 +980,57 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch((err) => console.error("Weather error:", err));
     }
+
+    const newsModalEl = document.getElementById("newsModal");
+    function fetchCountryNews(countryName) {
+      const body = document.getElementById("newsModalBody");
+      body.innerHTML = '<p class="text-muted">Loading…</p>';
+      fetch(`PHP/news_proxy.php?country=${encodeURIComponent(countryName)}`)
+        .then((res) => res.json())
+        .then(({ articles }) => {
+          if (!articles || articles.length === 0) {
+            body.innerHTML = "<p>No recent news found.</p>";
+            return;
+          }
+          const list = document.createElement("ul");
+          list.className = "list-group";
+          articles.forEach((a) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerHTML = `
+          <a href="${a.link}" target="_blank" class="fw-bold">${a.title}</a>
+          <p class="mb-0 small text-muted">${a.source_id} • ${new Date(
+              a.pubDate
+            ).toLocaleDateString()}</p>
+        `;
+            list.appendChild(li);
+          });
+          body.innerHTML = "";
+          body.appendChild(list);
+        })
+        .catch((err) => {
+          console.error("News fetch error:", err);
+          document.getElementById("newsModalBody").innerHTML =
+            '<p class="text-danger">Failed to load news.</p>';
+        });
+    }
+
+    // When user picks a new country:
+    countrySelect.addEventListener("change", () => {
+      const idx = countrySelect.selectedIndex;
+      if (idx <= 0) return;
+      const country = countrySelect.options[idx].text;
+      fetchCountryNews(country);
+    });
+
+    // Also when opening the modal (in case country was already selected):
+    $("#newsModal").on("show.bs.modal", () => {
+      const idx = countrySelect.selectedIndex;
+      if (idx > 0) {
+        const country = countrySelect.options[idx].text;
+        fetchCountryNews(country);
+      }
+    });
   });
 
   if ("geolocation" in navigator) {
