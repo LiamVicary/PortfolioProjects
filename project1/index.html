@@ -459,7 +459,7 @@
                     id="modalFlagImage"
                     src=""
                     alt="Country flag"
-                    style="max-width: 350px"
+                    style="max-width: 275px"
                   />
                 </td>
               </tr>
@@ -469,6 +469,43 @@
             <button
               type="button"
               class="btn btn-outline-info btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ________________________________________WIKIPEDIA MODAL________________________________________ -->
+    <div
+      id="wikiModal"
+      class="modal fade"
+      data-bs-backdrop="false"
+      tabindex="-1"
+      aria-labelledby="wikiModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-secondary text-white">
+            <h5 class="modal-title" id="wikiModalLabel">Wikipedia Summary</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <h6 id="modalWikiTitle" class="mb-2">…</h6>
+            <p id="modalWikiExtract" class="text-muted">Loading…</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
               data-bs-dismiss="modal"
             >
               Close
