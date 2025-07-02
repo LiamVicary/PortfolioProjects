@@ -60,6 +60,14 @@ var newsBtn = L.easyButton("fa-newspaper fa-xl", function (btn, map) {
   $("#newsModal").modal("show");
 });
 
+// WIKI MODAL
+var wikiBtn = L.easyButton(
+  "fa-brands fa-wikipedia-w fa-xl",
+  function (btn, map) {
+    $("#wikiModal").modal("show");
+  }
+);
+
 // SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -90,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   currencyBtn.addTo(map);
   flagBtn.addTo(map);
   newsBtn.addTo(map);
+  wikiBtn.addTo(map);
 
   // POPULATE <select>
 
@@ -127,6 +136,46 @@ document.addEventListener("DOMContentLoaded", () => {
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
 
+  // --------------------------------------WIKI MODAL--------------------------------------
+
+  async function showWiki(country) {
+    const titleEl = document.getElementById("modalWikiTitle");
+    const extractEl = document.getElementById("modalWikiExtract");
+    const wikiModal = new bootstrap.Modal(document.getElementById("wikiModal"));
+
+    titleEl.textContent = country;
+    extractEl.textContent = "Loading…";
+    wikiModal.show();
+
+    try {
+      const resp = await fetch(
+        `PHP/get_wiki.php?country=${encodeURIComponent(country)}`
+      );
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      // Decide what to show
+      if (data.source) {
+        // Make a clickable link
+        extractEl.innerHTML = `
+            <a href="${data.source}" 
+               target="_blank" 
+               rel="noopener noreferrer">
+              Read more on Wikipedia
+            </a>
+          `;
+      } else if (data.extract) {
+        extractEl.textContent = data.extract;
+      } else if (data.description) {
+        extractEl.textContent = data.description;
+      } else {
+        extractEl.textContent = "No summary available.";
+      }
+    } catch (err) {
+      console.error(err);
+      extractEl.textContent = "Could not load summary.";
+    }
+  }
   // --------------------------------------CURRENCY MODAL--------------------------------------
 
   const currencyModalEl = document.getElementById("currencyModal");
@@ -708,7 +757,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     // MODAL CURRENCY
-    // assume `countryName` is the full name from the <select>
     fetch(
       `PHP/get_currency_rest.php?country=${encodeURIComponent(countryName)}`
     )
