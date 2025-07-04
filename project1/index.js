@@ -3,13 +3,6 @@
 // ---------------------------------------------------------
 
 var map;
-window.poiMarkers = [];
-window.airportMarkers = [];
-window.arenaMarkers = [];
-window.hospitalMarkers = [];
-window.universityMarkers = [];
-window.weirdAttractionMarkers = [];
-window.parkMarkers = [];
 
 // tile layers
 
@@ -92,7 +85,25 @@ document.addEventListener("DOMContentLoaded", () => {
     layers: [streets],
   }).setView([54.5, -4], 6);
 
-  L.control.layers(basemaps).addTo(map);
+  window.poiCluster = L.markerClusterGroup();
+  window.airportCluster = L.markerClusterGroup();
+  window.arenaCluster = L.markerClusterGroup();
+  window.hospitalCluster = L.markerClusterGroup();
+  window.universityCluster = L.markerClusterGroup();
+  window.weirdAttractionCluster = L.markerClusterGroup();
+  window.parkCluster = L.markerClusterGroup();
+
+  const overlayMaps = {
+    POIs: window.poiCluster,
+    Airports: window.airportCluster,
+    Arenas: window.arenaCluster,
+    Hospitals: window.hospitalCluster,
+    Universities: window.universityCluster,
+    "Weird Attractions": window.weirdAttractionCluster,
+    Parks: window.parkCluster,
+  };
+  L.control.layers(basemaps, overlayMaps).addTo(map);
+
   infoBtn.addTo(map);
   weatherBtn.addTo(map);
   currencyBtn.addTo(map);
@@ -397,342 +408,206 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Geocode the POI's
     function fetchAndDisplayPOI(countryName) {
-      const query = `landmark in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `landmark in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No POIs found from Places API");
-            return;
-          }
-
-          // Clear old POI markers if any
-          if (window.poiMarkers) {
-            window.poiMarkers.forEach((marker) => map.removeLayer(marker));
-          }
-          window.poiMarkers = [];
-
-          const top10 = data.results.slice(0, 10); // Get top 6 results
-
-          top10.forEach((result, index) => {
+          window.poiCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const poiIcon = L.icon({
-              iconUrl: "images/POI-marker.png",
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: poiIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.poiMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/POI-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.poiCluster.addLayer(marker);
           });
-
-          console.log("Displayed top 3 POIs for", countryName);
+          console.log("Clustered POIs for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API POI fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     function fetchAndDisplayAirports(countryName) {
-      const query = `major airports in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `major airports in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No airports found from Places API");
-            return;
-          }
-
-          // Clear old airport markers if any
-          if (window.airportMarkers) {
-            window.airportMarkers.forEach((marker) => map.removeLayer(marker));
-          }
-          window.airportMarkers = [];
-
-          const top5 = data.results.slice(0, 5); // Get top 3 airports
-
-          top5.forEach((result) => {
+          window.airportCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const airportIcon = L.icon({
-              iconUrl: "images/airport-marker.png", // 🛩️ You can design your own icon
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: airportIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.airportMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/airport-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.airportCluster.addLayer(marker);
           });
-
-          console.log("Displayed up to 3 major airports for", countryName);
+          console.log("Clustered Airports for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API airport fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     function fetchAndDisplayArenas(countryName) {
-      const query = `major sports venues in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `major sports venues in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No sporting arenas found from Places API");
-            return;
-          }
-
-          // Clear previous arena markers
-          if (window.arenaMarkers) {
-            window.arenaMarkers.forEach((marker) => map.removeLayer(marker));
-          }
-          window.arenaMarkers = [];
-
-          const top8 = data.results.slice(0, 8);
-
-          top8.forEach((result) => {
+          window.arenaCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const arenaIcon = L.icon({
-              iconUrl: "images/arena-marker.png", // You can design a stadium icon
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: arenaIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.arenaMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/arena-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.arenaCluster.addLayer(marker);
           });
-
-          console.log("Displayed up to 3 sporting arenas for", countryName);
+          console.log("Clustered Arenas for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API sports arena fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
+
     function fetchAndDisplayHospitals(countryName) {
-      const query = `major hospitals in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `major hospitals in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No hospitals found from Places API");
-            return;
-          }
-
-          // Clear previous hospital markers
-          if (window.hospitalMarkers) {
-            window.hospitalMarkers.forEach((marker) => map.removeLayer(marker));
-          }
-          window.hospitalMarkers = [];
-
-          const top3 = data.results.slice(0, 3); // Show 3 hospitals
-
-          top3.forEach((result) => {
+          window.hospitalCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const hospitalIcon = L.icon({
-              iconUrl: "images/hospital-marker.png", // Use a red cross or medical icon
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: hospitalIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.hospitalMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/hospital-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.hospitalCluster.addLayer(marker);
           });
-
-          console.log("Displayed up to 3 hospitals for", countryName);
+          console.log("Clustered Hospitals for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API hospital fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     function fetchAndDisplayUniversities(countryName) {
-      const query = `top universities in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `top universities in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No universities found from Places API");
-            return;
-          }
-
-          // Clear previous university markers
-          if (window.universityMarkers) {
-            window.universityMarkers.forEach((marker) =>
-              map.removeLayer(marker)
-            );
-          }
-          window.universityMarkers = [];
-
-          const top5 = data.results.slice(0, 5); // Get top 3 universities
-
-          top5.forEach((result) => {
+          window.universityCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const universityIcon = L.icon({
-              iconUrl: "images/university-marker.png", // 🎓 Use a school/campus icon
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: universityIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.universityMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/university-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.universityCluster.addLayer(marker);
           });
-
-          console.log("Displayed top 3 universities for", countryName);
+          console.log("Clustered Universities for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API university fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     function fetchAndDisplayWeirdAttractions(countryName) {
-      const query = `weird attractions in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `weird attractions in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No weird attractions found from Places API");
-            return;
-          }
-
-          // Remove previous weird attraction markers
-          if (window.weirdAttractionMarkers) {
-            window.weirdAttractionMarkers.forEach((marker) =>
-              map.removeLayer(marker)
-            );
-          }
-          window.weirdAttractionMarkers = [];
-
-          const top3 = data.results.slice(0, 3);
-
-          top3.forEach((result) => {
+          window.weirdAttractionCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const weirdIcon = L.icon({
-              iconUrl: "images/weird-marker.png", // 🎭 Or a question mark / alien / skull
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: weirdIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.weirdAttractionMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/weird-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.weirdAttractionCluster.addLayer(marker);
           });
-
-          console.log("Displayed weird attractions for", countryName);
+          console.log("Clustered Weird Attractions for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API weird attraction fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     function fetchAndDisplayNationalParks(countryName) {
-      const query = `national parks in ${countryName}`;
-
-      fetch(`PHP/geocode_google_places.php?q=${encodeURIComponent(query)}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
+      fetch(
+        `PHP/geocode_google_places.php?q=${encodeURIComponent(
+          `national parks in ${countryName}`
+        )}`
+      )
+        .then((res) => res.json())
         .then((data) => {
-          if (!data.results || data.results.length === 0) {
-            console.warn("No national parks found from Places API");
-            return;
-          }
-
-          // Clear previous national park markers
-          if (window.parkMarkers) {
-            window.parkMarkers.forEach((marker) => map.removeLayer(marker));
-          }
-          window.parkMarkers = [];
-
-          const top3 = data.results.slice(0, 3);
-
-          top3.forEach((result) => {
+          window.parkCluster.clearLayers();
+          if (!data.results) return;
+          data.results.slice(0, 20).forEach((result) => {
             const { lat, lng } = result.geometry.location;
-            const name = result.name;
-            const address = result.formatted_address;
-
-            const parkIcon = L.icon({
-              iconUrl: "images/park-marker.png", // 🏞️ Use a tree, mountain, or leaf icon
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40],
-            });
-
-            const marker = L.marker([lat, lng], { icon: parkIcon })
-              .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>${address}`);
-
-            window.parkMarkers.push(marker);
+            const marker = L.marker([lat, lng], {
+              icon: L.icon({
+                iconUrl: "images/park-marker.png",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40],
+              }),
+            }).bindPopup(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            );
+            window.parkCluster.addLayer(marker);
           });
-
-          console.log("Displayed national parks for", countryName);
+          console.log("Clustered National Parks for", countryName);
         })
-        .catch((err) => {
-          console.error("Google Places API national park fetch error:", err);
-        });
+        .catch((err) => console.error(err));
     }
 
     // MODAL - LANGUAGES
