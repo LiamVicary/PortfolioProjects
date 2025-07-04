@@ -1,54 +1,54 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
+// Validate input
 if (!isset($_GET['country']) || trim($_GET['country']) === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Missing title parameter']);
+    echo json_encode(['error' => 'Missing country parameter']);
     exit;
 }
 
 $country     = trim($_GET['country']);
 $safeCountry = rawurlencode($country);
 
-// 1) Fetch the HTML for that page
-$htmlUrl = "https://en.wikipedia.org/w/rest.php/v1/page/{$safeCountry}";
+// Build the Wikimedia API URL for extracts
+$apiUrl = "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles={$safeCountry}";
 
-$ch = curl_init($htmlUrl);
+// Initialize cURL and fetch
+$ch = curl_init($apiUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_USERAGENT, 'MyApp/1.0 (youremail@example.com)');
-$html     = curl_exec($ch);
+$response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-if ($httpCode !== 200) {
+// Handle HTTP errors
+if ($httpCode !== 200 || !$response) {
     http_response_code($httpCode);
-    echo json_encode(['error' => "Wikipedia HTML API returned HTTP {$httpCode}"]);
+    echo json_encode(['error' => "Wikipedia API returned HTTP {$httpCode}"]);
     exit;
 }
 
-
-libxml_use_internal_errors(true);
-$doc = new DOMDocument();
-
-$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html);
-libxml_clear_errors();
-
-$section = $doc->getElementById('mwAQ');
-$extract = '';
-
-if ($section) {
-    $paras = $section->getElementsByTagName('p');
-    if ($paras->length > 0) {
-        $extract = trim($paras->item(0)->textContent);
-    }
+// Decode and parse the JSON response
+$data = json_decode($response, true);
+if (!isset($data['query']['pages'])) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Invalid API response']);
+    exit;
 }
 
-if ($extract === '') {
-    $extract = 'No summary available.';
-}
+$pages = $data['query']['pages'];
+$page  = reset($pages);
+
+// Extract summary
+$fullExtract = isset($page['extract']) && $page['extract'] !== ''
+    ? trim($page['extract'])
+    : 'No summary available.';
 
 
+
+// Output with the sanitized country as title
 echo json_encode([
-    'title'   => $title,
-    'extract' => $extract
-], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    'title'   => $country,
+    'extract' => $fullExtract
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
