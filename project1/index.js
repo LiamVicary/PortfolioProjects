@@ -35,7 +35,7 @@ var basemaps = {
 };
 
 // buttons
-// EXAMPLE MODAL
+// INFO MODAL
 var infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
 });
@@ -135,6 +135,46 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load country list:", err);
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
+
+  // -------------------------------------- WIKI MODAL INIT --------------------------------------
+  const wikiModalEl = document.getElementById("wikiModal");
+
+  // mirror your Weather/News handlers:
+  $(wikiModalEl).on("show.bs.modal", () => {
+    const idx = sel.selectedIndex;
+    if (idx <= 0) return; // nothing selected
+    const country = sel.options[idx].text;
+
+    // prime the UI
+    document.getElementById("modalWikiTitle").textContent = country;
+    document.getElementById("modalWikiExtract").textContent = "Loading…";
+
+    // fetch & display exactly as in showWiki()
+    fetch(`PHP/get_wiki.php?country=${encodeURIComponent(country)}`)
+      .then((resp) => {
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp.json();
+      })
+      .then((data) => {
+        const extractEl = document.getElementById("modalWikiExtract");
+        if (data.source) {
+          extractEl.innerHTML = `<a href="${data.source}" target="_blank" rel="noopener noreferrer">
+                                 Read more on Wikipedia
+                               </a>`;
+        } else if (data.extract) {
+          extractEl.textContent = data.extract;
+        } else if (data.description) {
+          extractEl.textContent = data.description;
+        } else {
+          extractEl.textContent = "No summary available.";
+        }
+      })
+      .catch((err) => {
+        console.error("Wiki fetch error:", err);
+        document.getElementById("modalWikiExtract").textContent =
+          "Could not load summary.";
+      });
+  });
 
   // --------------------------------------WIKI MODAL--------------------------------------
 
