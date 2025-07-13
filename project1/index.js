@@ -181,177 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.textContent = name;
         sel.appendChild(opt);
       });
-      console.log("Loaded", countries.length, "countries into <select>.");
     })
     .catch((err) => {
       console.error("Failed to load country list:", err);
       sel.innerHTML = "<option disabled>Error loading countries</option>";
     });
 
-  // -------------------------------------- WIKI MODAL INIT --------------------------------------
-  const wikiModalEl = document.getElementById("wikiModal");
-
-  // mirror your Weather/News handlers:
-  $(wikiModalEl).on("show.bs.modal", () => {
-    const idx = sel.selectedIndex;
-    if (idx <= 0) return; // nothing selected
-    const country = sel.options[idx].text;
-
-    // prime the UI
-    document.getElementById("modalWikiTitle").textContent = country;
-    document.getElementById("modalWikiExtract").textContent = "Loading…";
-
-    // fetch & display exactly as in showWiki()
-    fetch(`PHP/get_wiki.php?country=${encodeURIComponent(country)}`)
-      .then((resp) => {
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return resp.json();
-      })
-      .then((data) => {
-        const extractEl = document.getElementById("modalWikiExtract");
-        if (data.source) {
-          extractEl.innerHTML = `<a href="${data.source}" target="_blank" rel="noopener noreferrer">
-                                 Read more on Wikipedia
-                               </a>`;
-        } else if (data.extract) {
-          extractEl.textContent = data.extract;
-        } else if (data.description) {
-          extractEl.textContent = data.description;
-        } else {
-          extractEl.textContent = "No summary available.";
-        }
-      })
-      .catch((err) => {
-        console.error("Wiki fetch error:", err);
-        document.getElementById("modalWikiExtract").textContent =
-          "Could not load summary.";
-      });
-  });
-
-  // --------------------------------------WIKI MODAL--------------------------------------
-
-  async function showWiki(country) {
-    const titleEl = document.getElementById("modalWikiTitle");
-    const extractEl = document.getElementById("modalWikiExtract");
-    const wikiModal = new bootstrap.Modal(document.getElementById("wikiModal"));
-
-    titleEl.textContent = country;
-    extractEl.textContent = "Loading…";
-    wikiModal.show();
-
-    try {
-      const resp = await fetch(
-        `PHP/get_wiki.php?country=${encodeURIComponent(country)}`
-      );
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-
-      // Decide what to show
-      if (data.source) {
-        // Make a clickable link
-        extractEl.innerHTML = `
-            <a href="${data.source}" 
-               target="_blank" 
-               rel="noopener noreferrer">
-              Read more on Wikipedia
-            </a>
-          `;
-      } else if (data.extract) {
-        extractEl.textContent = data.extract;
-      } else if (data.description) {
-        extractEl.textContent = data.description;
-      } else {
-        extractEl.textContent = "No summary available.";
-      }
-    } catch (err) {
-      console.error(err);
-      extractEl.textContent = "Could not load summary.";
-    }
-  }
-  // --------------------------------------CURRENCY MODAL--------------------------------------
-
-  const currencyModalEl = document.getElementById("currencyModal");
-  const fromSelect = document.getElementById("fromCurrency");
-  const toSelect = document.getElementById("toCurrency");
-  console.log("fromSelect:", fromSelect, "toSelect:", toSelect);
-  const amountInput = document.getElementById("inputAmount");
-  const resultEl = document.getElementById("conversionResult");
-
-  // 1) detect user currency
-  async function getUserCurrency() {
-    if (!navigator.geolocation) return "USD";
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude: lat, longitude: lng } = pos.coords;
-          const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
-          const data = await res.json();
-          resolve(data?.results?.[0]?.annotations?.currency?.iso_code || "USD");
-        },
-        () => resolve("USD")
-      );
-    });
-  }
-
-  // 2) populate both <select>s
-  async function populateCurrencySelects() {
-    console.log("▶ populateCurrencySelects fired");
-    fromSelect.innerHTML = "";
-    toSelect.innerHTML = "";
-    const userCurr = await getUserCurrency();
-    const res = await fetch("PHP/currencies_proxy.php");
-    const data = await res.json();
-
-    // Check if the API call was successful
-    if (!data.success) {
-      console.error("Symbols API returned", data);
-      // Handle the error appropriately, e.g., display a message to the user
-      return;
-    }
-
-    // Rest of the code to populate the selects
-    if (!data.currencies) {
-      console.error("Symbols API returned", data);
-      return;
-    }
-    Object.entries(data.currencies).forEach(([code, fullName]) => {
-      const label = `${code} — ${fullName}`;
-      fromSelect.append(new Option(label, code));
-      toSelect.append(new Option(label, code));
-    });
-
-    fromSelect.value = "GBP";
-    toSelect.value = userCurr;
-  }
-
-  // 3) when modal is shown, fill the dropdowns
-  currencyModalEl.addEventListener("show.bs.modal", populateCurrencySelects);
-
-  // 4) on form submit, do the conversion
-  document
-    .getElementById("currencyForm")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const amount = +amountInput.value;
-      const from = fromSelect.value;
-      const to = toSelect.value;
-      try {
-        const res = await fetch(
-          `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
-        );
-        const { result } = await res.json();
-        if (result != null) {
-          resultEl.textContent = `${amount} ${from} = ${result.toFixed(
-            2
-          )} ${to}`;
-        } else {
-          resultEl.textContent = "Conversion failed";
-        }
-      } catch (err) {
-        resultEl.textContent = "Error";
-        console.error(err);
-      }
-    });
   // --------------------------------------INFORMATION MODAL--------------------------------------
   // FETCH BORDER + GEOCODE
 
@@ -364,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // MODAL - REGION
-    console.log("User selected ISO =", isoCode, "name =", countryName);
 
     fetch(`PHP/get_region.php?country=${encodeURIComponent(countryName)}`)
       .then((res) => {
@@ -380,7 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     // MODAL - CAPITAL CITY
-    console.log("User selected ISO =", isoCode, "name =", countryName);
 
     fetch(`PHP/get_capital.php?country=${encodeURIComponent(countryName)}`)
       .then((res) => {
@@ -479,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.poiCluster.addLayer(marker);
           });
-          console.log("Clustered POIs for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -514,7 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.airportCluster.addLayer(marker);
           });
-          console.log("Clustered Airports for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -549,7 +380,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.arenaCluster.addLayer(marker);
           });
-          console.log("Clustered Arenas for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -584,7 +414,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.hospitalCluster.addLayer(marker);
           });
-          console.log("Clustered Hospitals for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -619,7 +448,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.universityCluster.addLayer(marker);
           });
-          console.log("Clustered Universities for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -654,7 +482,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.weirdAttractionCluster.addLayer(marker);
           });
-          console.log("Clustered Weird Attractions for", countryName);
         })
         .catch((err) => console.error(err));
     }
@@ -689,13 +516,11 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             window.parkCluster.addLayer(marker);
           });
-          console.log("Clustered National Parks for", countryName);
         })
         .catch((err) => console.error(err));
     }
 
     // MODAL - LANGUAGES
-    console.log("User selected ISO =", isoCode, "name =", countryName);
 
     fetch(`PHP/get_languages.php?country=${encodeURIComponent(countryName)}`)
       .then((res) => {
@@ -712,7 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     // MODAL - POPULATION
-    console.log("User selected ISO =", isoCode, "name =", countryName);
 
     fetch(`PHP/get_population.php?country=${encodeURIComponent(countryName)}`)
       .then((res) => {
@@ -731,7 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     // MODAL - FLAG
-    console.log("User selected ISO =", isoCode, "name =", countryName);
 
     fetch(`PHP/get_flag.php?country=${encodeURIComponent(countryName)}`)
       .then((res) => {
@@ -794,11 +617,177 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#exampleModal").modal("show");
 
+    // -------------------------------------- WIKI MODAL INIT --------------------------------------
+    const wikiModalEl = document.getElementById("wikiModal");
+
+    // mirror your Weather/News handlers:
+    $(wikiModalEl).on("show.bs.modal", () => {
+      const idx = sel.selectedIndex;
+      if (idx <= 0) return; // nothing selected
+      const country = sel.options[idx].text;
+
+      // prime the UI
+      document.getElementById("modalWikiTitle").textContent = country;
+      document.getElementById("modalWikiExtract").textContent = "Loading…";
+
+      // fetch & display exactly as in showWiki()
+      fetch(`PHP/get_wiki.php?country=${encodeURIComponent(country)}`)
+        .then((resp) => {
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          return resp.json();
+        })
+        .then((data) => {
+          const extractEl = document.getElementById("modalWikiExtract");
+          if (data.source) {
+            extractEl.innerHTML = `<a href="${data.source}" target="_blank" rel="noopener noreferrer">
+                                 Read more on Wikipedia
+                               </a>`;
+          } else if (data.extract) {
+            extractEl.textContent = data.extract;
+          } else if (data.description) {
+            extractEl.textContent = data.description;
+          } else {
+            extractEl.textContent = "No summary available.";
+          }
+        })
+        .catch((err) => {
+          console.error("Wiki fetch error:", err);
+          document.getElementById("modalWikiExtract").textContent =
+            "Could not load summary.";
+        });
+    });
+
+    // --------------------------------------WIKI MODAL--------------------------------------
+
+    async function showWiki(country) {
+      const titleEl = document.getElementById("modalWikiTitle");
+      const extractEl = document.getElementById("modalWikiExtract");
+      const wikiModal = new bootstrap.Modal(
+        document.getElementById("wikiModal")
+      );
+
+      titleEl.textContent = country;
+      extractEl.textContent = "Loading…";
+      wikiModal.show();
+
+      try {
+        const resp = await fetch(
+          `PHP/get_wiki.php?country=${encodeURIComponent(country)}`
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        // Decide what to show
+        if (data.source) {
+          // Make a clickable link
+          extractEl.innerHTML = `
+            <a href="${data.source}" 
+               target="_blank" 
+               rel="noopener noreferrer">
+              Read more on Wikipedia
+            </a>
+          `;
+        } else if (data.extract) {
+          extractEl.textContent = data.extract;
+        } else if (data.description) {
+          extractEl.textContent = data.description;
+        } else {
+          extractEl.textContent = "No summary available.";
+        }
+      } catch (err) {
+        console.error(err);
+        extractEl.textContent = "Could not load summary.";
+      }
+    }
+    // --------------------------------------CURRENCY MODAL--------------------------------------
+
+    const currencyModalEl = document.getElementById("currencyModal");
+    const fromSelect = document.getElementById("fromCurrency");
+    const toSelect = document.getElementById("toCurrency");
+    const amountInput = document.getElementById("inputAmount");
+    const resultEl = document.getElementById("conversionResult");
+
+    // 1) detect user currency
+    async function getUserCurrency() {
+      if (!navigator.geolocation) return "USD";
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
+            const data = await res.json();
+            resolve(
+              data?.results?.[0]?.annotations?.currency?.iso_code || "USD"
+            );
+          },
+          () => resolve("USD")
+        );
+      });
+    }
+
+    // 2) populate both <select>s
+    async function populateCurrencySelects() {
+      fromSelect.innerHTML = "";
+      toSelect.innerHTML = "";
+      const userCurr = await getUserCurrency();
+      const res = await fetch("PHP/currencies_proxy.php");
+      const data = await res.json();
+
+      // Check if the API call was successful
+      if (!data.success) {
+        console.error("Symbols API returned", data);
+        // Handle the error appropriately, e.g., display a message to the user
+        return;
+      }
+
+      // Rest of the code to populate the selects
+      if (!data.currencies) {
+        console.error("Symbols API returned", data);
+        return;
+      }
+      Object.entries(data.currencies).forEach(([code, fullName]) => {
+        const label = `${code} — ${fullName}`;
+        fromSelect.append(new Option(label, code));
+        toSelect.append(new Option(label, code));
+      });
+
+      fromSelect.value = "GBP";
+      toSelect.value = userCurr;
+    }
+
+    // 3) when modal is shown, fill the dropdowns
+    currencyModalEl.addEventListener("show.bs.modal", populateCurrencySelects);
+
+    // 4) on form submit, do the conversion
+    document
+      .getElementById("currencyForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const amount = +amountInput.value;
+        const from = fromSelect.value;
+        const to = toSelect.value;
+        try {
+          const res = await fetch(
+            `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
+          );
+          const { result } = await res.json();
+          if (result != null) {
+            resultEl.textContent = `${amount} ${from} = ${result.toFixed(
+              2
+            )} ${to}`;
+          } else {
+            resultEl.textContent = "Conversion failed";
+          }
+        } catch (err) {
+          resultEl.textContent = "Error";
+          console.error(err);
+        }
+      });
+
     // --------------------------------------FETCH AND DRAW COUNTRY BORDER GEOJSON--------------------------------------
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
       isoCode
     )}`;
-    console.log("Fetching border from:", borderUrl);
 
     fetch(borderUrl)
       .then((res) => {
@@ -823,7 +812,6 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         }).addTo(map);
         map.fitBounds(window.currentCountryLayer.getBounds());
-        console.log("Rendered border for", countryName);
       })
       .catch((err) => {
         console.error("Failed to load border for", countryName, err);
@@ -851,7 +839,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const { lat, lng } = data.results[0].geometry;
-        console.log(`Geocoded ${countryName} → lat=${lat}, lng=${lng}`);
 
         document.getElementById("modalCountryName").textContent = countryName;
         document.getElementById(
@@ -1090,7 +1077,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         window.userMarker = L.marker([lat, lng], {
           icon: L.icon({
-            //Custom icon goes here
+            iconUrl: "images/you-are-here.png", // your PNG file
+            iconSize: [60, 40], // width, height in pixels
+            iconAnchor: [30, 60], // point of the icon which corresponds to marker's location (half width, full height)
+            popupAnchor: [0, -32], // point from which popups will “open”, relative to iconAnchor
           }),
         })
           .addTo(map)
