@@ -25,3 +25,15 @@ body {
 #countrySelect {
   width: 220px;
 }
+
+/* smooth transition */
+.marker-cluster {
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* on hover, scale up & brighten */
+.marker-cluster:hover {
+  transform: scale(1.15);
+  filter: brightness(1.3);
+  cursor: pointer; /* indicate interactivity */
+}
