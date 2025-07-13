@@ -64,34 +64,75 @@ var wikiBtn = L.easyButton(
 // SINGLE DOMCONTENTLOADED HANDLER FOR EVERYTHING
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🔥 index.js loaded");
-
-  // 1️⃣ Quick test: hit your PHP proxy directly and dump the response
-  (async function debugCurrencyProxy() {
-    try {
-      console.log("→ Fetching PHP/currencies_proxy.php …");
-      const resp = await fetch("PHP/currencies_proxy.php");
-      console.log("← status:", resp.status);
-      const text = await resp.text();
-      console.log("← body:", text);
-    } catch (err) {
-      console.error("‼️ proxy fetch error:", err);
-    }
-  })();
-
   // INITIALISE MAP & LAYERS
 
   map = L.map("map", {
     layers: [streets],
   }).setView([54.5, -4], 6);
 
-  window.poiCluster = L.markerClusterGroup();
-  window.airportCluster = L.markerClusterGroup();
-  window.arenaCluster = L.markerClusterGroup();
-  window.hospitalCluster = L.markerClusterGroup();
-  window.universityCluster = L.markerClusterGroup();
-  window.weirdAttractionCluster = L.markerClusterGroup();
-  window.parkCluster = L.markerClusterGroup();
+  window.poiCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.airportCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.arenaCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.hospitalCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.universityCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.weirdAttractionCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
+  window.parkCluster = L.markerClusterGroup({
+    polygonOptions: {
+      fillColor: "#EE8866",
+      color: "#EE8866",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.2,
+    },
+  });
 
   const overlayMaps = {
     POIs: window.poiCluster,
@@ -384,18 +425,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const capitalIcon = L.icon({
               iconUrl: "images/capital-marker.png",
-              iconSize: [80, 80],
-              iconAnchor: [40, 80],
+              iconSize: [50, 50],
+              iconAnchor: [25, 50],
               popupAnchor: [0, -35],
             });
 
             window.capitalMarker = L.marker([lat, lng], { icon: capitalIcon })
               .addTo(map)
-              .bindPopup(
-                `<strong>${capitalCity}</strong><br>${lat.toFixed(
-                  4
-                )}, ${lng.toFixed(4)}`
-              );
+              .bindTooltip(`<strong>${capitalCity}</strong>`, {
+                direction: "top",
+                offset: [0, -50],
+                permanent: false,
+                opacity: 0.9,
+              });
           })
           .catch((err) => {
             console.error("Failed to geocode capital city:", err);
@@ -426,8 +468,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.poiCluster.addLayer(marker);
           });
@@ -455,8 +503,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.airportCluster.addLayer(marker);
           });
@@ -484,8 +538,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.arenaCluster.addLayer(marker);
           });
@@ -513,8 +573,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.hospitalCluster.addLayer(marker);
           });
@@ -542,8 +608,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.universityCluster.addLayer(marker);
           });
@@ -571,8 +643,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.weirdAttractionCluster.addLayer(marker);
           });
@@ -600,8 +678,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 iconAnchor: [20, 40],
                 popupAnchor: [0, -40],
               }),
-            }).bindPopup(
-              `<strong>${result.name}</strong><br>${result.formatted_address}`
+            }).bindTooltip(
+              `<strong>${result.name}</strong><br>${result.formatted_address}`,
+              {
+                direction: "top",
+                offset: [0, -40],
+                permanent: false,
+                opacity: 0.9,
+              }
             );
             window.parkCluster.addLayer(marker);
           });
@@ -708,6 +792,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("modalCountryBorders").textContent = "Error";
       });
 
+    $("#exampleModal").modal("show");
+
     // --------------------------------------FETCH AND DRAW COUNTRY BORDER GEOJSON--------------------------------------
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
       isoCode
@@ -727,7 +813,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.currentCountryLayer) {
           map.removeLayer(window.currentCountryLayer);
         }
-        window.currentCountryLayer = L.geoJSON(featureGeoJSON).addTo(map);
+        window.currentCountryLayer = L.geoJSON(featureGeoJSON, {
+          style: {
+            color: "#0072B2", // border color
+            weight: 2, // border width (pixels)
+            dashArray: "15,5", // dashed border: 5px dash, 5px gap
+            fillColor: "#56B4E9", // semi-transparent fill
+            fillOpacity: 0.2, // fill opacity (0.0–1.0)
+          },
+        }).addTo(map);
         map.fitBounds(window.currentCountryLayer.getBounds());
         console.log("Rendered border for", countryName);
       })
@@ -759,22 +853,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const { lat, lng } = data.results[0].geometry;
         console.log(`Geocoded ${countryName} → lat=${lat}, lng=${lng}`);
 
-        if (window.geocodeMarker) {
-          map.removeLayer(window.geocodeMarker);
-        }
-        window.geocodeMarker = L.marker([lat, lng]).addTo(map);
-
-        window.geocodeMarker
-          .bindPopup(`${countryName}: [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
-          .openPopup();
-        map.setView([lat, lng], 5);
-
         document.getElementById("modalCountryName").textContent = countryName;
         document.getElementById(
           "modalCoordinates"
         ).textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-        $("#exampleModal").modal("show");
       })
       .catch((err) => {
         console.error("Failed to geocode via proxy for", countryName, err);
@@ -858,7 +940,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Temperature, humidity, wind
           document.getElementById(
             "modalTemperatureBig"
-          ).textContent = `${data.current.temp_c}°C`;
+          ).textContent = `${Math.round(data.current.temp_c)}°C`;
           document.getElementById(
             "modalHumidity"
           ).textContent = `${data.current.humidity}%`;
@@ -906,15 +988,16 @@ document.addEventListener("DOMContentLoaded", () => {
             today.condition.text;
 
           // Bottom row: next three days
-          days.slice(1, 4).forEach((d, idx) => {
+          days.slice(1, 3).forEach((d, idx) => {
             if (!d) return; // no day object? skip
-            const slot = idx + 1; // 1,2,3
+            const slot = idx + 1; // 1,2
 
             // 1) compute date & name
-            const dateStr = d.date;
-            const dayNameShort = new Date(dateStr).toLocaleDateString("en-GB", {
-              weekday: "short",
+            const dateObj = new Date(d.date); // parse the ISO string
+            const dayNameShort = dateObj.toLocaleDateString("en-GB", {
+              weekday: "short", // “Mon”, “Tue”, etc.
             });
+            const dayNumber = dateObj.getDate(); // 1–31
 
             // 2) update elements, but only if they exist
             const nameEl = document.getElementById(
@@ -925,7 +1008,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const dateEl = document.getElementById(
               `modalForecastDay${slot}Date`
             );
-            if (dateEl) dateEl.textContent = dateStr;
+            if (dateEl) dateEl.textContent = dayNumber;
 
             const iconEl = document.getElementById(
               `modalForecastDay${slot}Icon`
@@ -1013,8 +1096,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .addTo(map)
           .bindPopup("You are here")
           .openPopup();
-
-        map.setView([lat, lng], 10);
 
         //Reverse‐geocode to get a human‐readable address
         const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
