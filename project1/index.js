@@ -727,9 +727,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2) populate both <select>s
     async function populateCurrencySelects() {
-      fromSelect.innerHTML = "";
-      toSelect.innerHTML = "";
       const userCurr = await getUserCurrency();
+      fromSelect.innerHTML = userCurr;
+      toSelect.innerHTML = "";
       const res = await fetch("PHP/currencies_proxy.php");
       const data = await res.json();
 
@@ -1014,6 +1014,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch((err) => console.error("Weather error:", err));
     }
 
+    // --------------------------------------NEWS MODAL--------------------------------------
     const newsModalEl = document.getElementById("newsModal");
     function fetchCountryNews(countryName) {
       const body = document.getElementById("newsModalBody");
@@ -1025,43 +1026,71 @@ document.addEventListener("DOMContentLoaded", () => {
             body.innerHTML = "<p>No recent news found.</p>";
             return;
           }
+
+          const seen = new Set();
+          const unique = [];
+          for (const a of articles) {
+            if (!seen.has(a.link)) {
+              seen.add(a.link);
+              unique.push(a);
+            }
+          }
+
           const list = document.createElement("ul");
           list.className = "list-group";
+
           articles.forEach((a) => {
+            // create a list-item for each article
             const li = document.createElement("li");
             li.className = "list-group-item";
+
+            // build the inner HTML, with a fallback if image_url is missing
             li.innerHTML = `
-          <a href="${a.link}" target="_blank" class="fw-bold">${a.title}</a>
-          <p class="mb-0 small text-muted">${a.source_id} • ${new Date(
-              a.pubDate
-            ).toLocaleDateString()}</p>
+          <div class="d-flex align-items-start">
+            ${
+              a.image_url
+                ? `<img src="${a.image_url}"
+                    alt="${a.title}"
+                    class="me-3"
+                    style="width:80px; height:80px; object-fit:cover; border-radius:4px;">`
+                : `<!-- no image -->`
+            }
+            <div>
+              <a href="${a.link}"
+                target="_blank"
+                class="fw-bold d-block mb-1"
+                style="text-decoration:none; color:inherit;">
+                ${a.title}
+              </a>
+              <p class="mb-0 small text-muted">
+                ${a.source_id} •
+                ${new Date(a.pubDate).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
         `;
             list.appendChild(li);
           });
+
           body.innerHTML = "";
           body.appendChild(list);
         })
         .catch((err) => {
           console.error("News fetch error:", err);
-          document.getElementById("newsModalBody").innerHTML =
-            '<p class="text-danger">Failed to load news.</p>';
+          body.innerHTML = '<p class="text-danger">Failed to load news.</p>';
         });
     }
 
-    // When user picks a new country:
+    // wire up your existing country-select handlers...
     countrySelect.addEventListener("change", () => {
       const idx = countrySelect.selectedIndex;
       if (idx <= 0) return;
-      const country = countrySelect.options[idx].text;
-      fetchCountryNews(country);
+      fetchCountryNews(countrySelect.options[idx].text);
     });
-
-    // Also when opening the modal (in case country was already selected):
     $("#newsModal").on("show.bs.modal", () => {
       const idx = countrySelect.selectedIndex;
       if (idx > 0) {
-        const country = countrySelect.options[idx].text;
-        fetchCountryNews(country);
+        fetchCountryNews(countrySelect.options[idx].text);
       }
     });
   });
@@ -1077,9 +1106,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         window.userMarker = L.marker([lat, lng], {
           icon: L.icon({
-            iconUrl: "images/you-are-here.png", // your PNG file
-            iconSize: [60, 40], // width, height in pixels
-            iconAnchor: [30, 60], // point of the icon which corresponds to marker's location (half width, full height)
+            iconUrl: "images/you-are-here_tall.png", // your PNG file
+            iconSize: [33, 50], // width, height in pixels
+            iconAnchor: [17, 50], // point of the icon which corresponds to marker's location (half width, full height)
             popupAnchor: [0, -32], // point from which popups will “open”, relative to iconAnchor
           }),
         })
@@ -1087,29 +1116,45 @@ document.addEventListener("DOMContentLoaded", () => {
           .bindPopup("You are here")
           .openPopup();
 
-        //Reverse‐geocode to get a human‐readable address
         const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
         fetch(phpReverseUrl)
           .then((res) => {
-            if (!res.ok) throw new Error(res.status + " " + res.statusText);
+            if (!res.ok) throw new Error(res.statusText);
             return res.json();
           })
           .then((data) => {
-            if (data.results && data.results.length > 0) {
-              const place = data.results[0].formatted;
-              document.getElementById("modalLocationName").textContent = place;
-              window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
+            if (!(data.results && data.results.length)) return;
+            const first = data.results[0];
+
+            // 1) Display the human-readable place
+            const place = first.formatted;
+            document.getElementById("modalLocationName").textContent = place;
+            window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
+
+            // 2) Extract the ISO country code (we assume your PHP/OpenCage proxy returns components.country_code)
+            const countryCode = (
+              first.components && first.components.country_code
+            )?.toUpperCase(); // e.g. "GB", "FR", "US"
+
+            if (countryCode) {
+              // 3) Select that country in your <select id="countrySelect">
+              const sel = document.getElementById("countrySelect");
+              sel.value = countryCode;
+
+              // 4) Trigger the change handler so all your modals / markers / etc. load
+              sel.dispatchEvent(new Event("change"));
             }
           })
-          .catch((err) =>
-            console.error("Reverse geocode (user location) error:", err)
-          );
+          .catch((err) => console.error("Reverse-geocode (user) error:", err));
       },
-      (err) => {
-        console.error("Geolocation error:", err);
-      }
+      (err) => console.error("Geolocation error:", err)
     );
-  } else {
-    console.warn("Geolocation not available in this browser");
   }
+  window.addEventListener("load", function () {
+    const pre = document.getElementById("preloader");
+
+    pre.style.transition = "opacity 0.5s";
+    pre.style.opacity = 0;
+    setTimeout(() => pre.remove(), 2000);
+  });
 });
