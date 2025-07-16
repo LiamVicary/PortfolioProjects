@@ -8,7 +8,17 @@ if (!isset($_GET['country']) || trim($_GET['country']) === '') {
   exit;
 }
 
-$q = rawurlencode(trim($_GET['country']));
+$country = trim($_GET['country']);
+
+// map “United Kingdom” → “UK”
+if (strcasecmp($country, 'United Kingdom') === 0) {
+    // use the API’s short code
+    $q = 'UK';
+} else {
+    // everything else gets rawurlencoded
+    $q = rawurlencode($country);
+}
+
 $url = "https://api.weatherapi.com/v1/current.json"
      . "?key={$key}&q={$q}&aqi=no";
 
