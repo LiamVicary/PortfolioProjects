@@ -34,7 +34,7 @@ var infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
 });
 
 // WEATHER MODAL
-var weatherBtn = L.easyButton("fa-cloud-sun fa-xl", function (btn, map) {
+var weatherBtn = L.easyButton("fa-cloud fa-xl", function (btn, map) {
   $("#weatherModal").modal("show");
 });
 
@@ -728,31 +728,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2) populate both <select>s
     async function populateCurrencySelects() {
       const userCurr = await getUserCurrency();
-      fromSelect.innerHTML = userCurr;
+
+      // --- FROM: only USD ---
+      fromSelect.innerHTML = "";
+      fromSelect.append(new Option("USD", "USD"));
+
+      // --- TO: fetch your new proxy ---
       toSelect.innerHTML = "";
       const res = await fetch("PHP/currencies_proxy.php");
       const data = await res.json();
 
-      // Check if the API call was successful
-      if (!data.success) {
-        console.error("Symbols API returned", data);
-        // Handle the error appropriately, e.g., display a message to the user
+      if (!data.rates) {
+        console.error("Rates API returned", data);
         return;
       }
 
-      // Rest of the code to populate the selects
-      if (!data.currencies) {
-        console.error("Symbols API returned", data);
-        return;
-      }
-      Object.entries(data.currencies).forEach(([code, fullName]) => {
-        const label = `${code} — ${fullName}`;
-        fromSelect.append(new Option(label, code));
-        toSelect.append(new Option(label, code));
+      // Populate second select with currency codes
+      Object.keys(data.rates).forEach((code) => {
+        toSelect.append(new Option(code, code));
       });
 
-      fromSelect.value = "GBP";
-      toSelect.value = userCurr;
+      // Optionally pre-select the user’s currency (if it’s in the list)
+      if (data.rates[userCurr]) {
+        toSelect.value = userCurr;
+      }
     }
 
     // 3) when modal is shown, fill the dropdowns
@@ -1020,55 +1019,60 @@ document.addEventListener("DOMContentLoaded", () => {
       const body = document.getElementById("newsModalBody");
       body.innerHTML = '<p class="text-muted">Loading…</p>';
       fetch(`PHP/news_proxy.php?country=${encodeURIComponent(countryName)}`)
-        .then((res) => res.json())
-        .then(({ articles }) => {
-          if (!articles || articles.length === 0) {
+        .then((res) => {
+          if (!res.ok) throw new Error(res.statusText);
+          return res.json();
+        })
+        .then((data) => {
+          // 1) ensure `articles` is an array
+          const articles = Array.isArray(data.articles) ? data.articles : [];
+          // 2) optionally log unexpected shapes
+          if (data.error) {
+            console.warn("News proxy returned error:", data.error);
+          }
+          // 3) early-exit if empty
+          if (articles.length === 0) {
             body.innerHTML = "<p>No recent news found.</p>";
             return;
           }
 
+          // dedupe by link (if needed)
           const seen = new Set();
-          const unique = [];
-          for (const a of articles) {
-            if (!seen.has(a.link)) {
-              seen.add(a.link);
-              unique.push(a);
-            }
-          }
+          const unique = articles.filter((a) => {
+            if (seen.has(a.link)) return false;
+            seen.add(a.link);
+            return true;
+          });
 
+          // build your list from `unique`
           const list = document.createElement("ul");
           list.className = "list-group";
-
-          articles.forEach((a) => {
-            // create a list-item for each article
+          unique.forEach((a) => {
             const li = document.createElement("li");
             li.className = "list-group-item";
-
-            // build the inner HTML, with a fallback if image_url is missing
             li.innerHTML = `
-          <div class="d-flex align-items-start">
-            ${
-              a.image_url
-                ? `<img src="${a.image_url}"
-                    alt="${a.title}"
+        <div class="d-flex align-items-start">
+          ${
+            a.image_url
+              ? `<img src="${a.image_url}" alt="${a.title}"
                     class="me-3"
                     style="width:80px; height:80px; object-fit:cover; border-radius:4px;">`
-                : `<!-- no image -->`
-            }
-            <div>
-              <a href="${a.link}"
-                target="_blank"
-                class="fw-bold d-block mb-1"
-                style="text-decoration:none; color:inherit;">
-                ${a.title}
-              </a>
-              <p class="mb-0 small text-muted">
-                ${a.source_id} •
-                ${new Date(a.pubDate).toLocaleDateString()}
-              </p>
-            </div>
+              : ``
+          }
+          <div>
+            <a href="${a.link}"
+               target="_blank"
+               class="fw-bold d-block mb-1"
+               style="text-decoration:none; color:inherit;">
+              ${a.title}
+            </a>
+            <p class="mb-0 small text-muted">
+              ${a.source_id} •
+              ${new Date(a.pubDate).toLocaleDateString()}
+            </p>
           </div>
-        `;
+        </div>
+      `;
             list.appendChild(li);
           });
 
@@ -1111,10 +1115,7 @@ document.addEventListener("DOMContentLoaded", () => {
             iconAnchor: [17, 50], // point of the icon which corresponds to marker's location (half width, full height)
             popupAnchor: [0, -32], // point from which popups will “open”, relative to iconAnchor
           }),
-        })
-          .addTo(map)
-          .bindPopup("You are here")
-          .openPopup();
+        }).addTo(map);
 
         const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
         fetch(phpReverseUrl)
@@ -1129,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 1) Display the human-readable place
             const place = first.formatted;
             document.getElementById("modalLocationName").textContent = place;
-            window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
+            //window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
 
             // 2) Extract the ISO country code (we assume your PHP/OpenCage proxy returns components.country_code)
             const countryCode = (
