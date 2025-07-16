@@ -49,7 +49,7 @@
               aria-label="Close"
             ></button>
           </div>
-          <span id="modalLocationName" class="text-center"></span>
+
           <div class="modal-body">
             <table class="table table-striped">
               <!--Modal Row-->
@@ -340,21 +340,18 @@
               <!-- From Currency -->
               <div class="mb-3">
                 <label for="fromCurrency" class="form-label">From</label>
-                <input
-                  type="text"
-                  class="form-control-plaintext"
-                  id="fromCurrency"
-                  value="USD"
-                  readonly
-                />
+                <select id="fromCurrency" class="form-select"></select>
               </div>
 
               <!-- To Currency -->
               <div class="mb-3">
                 <label for="toCurrency" class="form-label">To</label>
-                <select id="toCurrency" class="form-select">
-                  <!-- JS will populate -->
-                </select>
+                <select id="toCurrency" class="form-select"></select>
+              </div>
+
+              <!-- Exchange rate info -->
+              <div class="px-3 pt-2">
+                <small id="modalOtherLocationName" class="text-muted"></small>
               </div>
 
               <!-- Result Display -->
@@ -364,7 +361,6 @@
 
               <!-- Action Buttons -->
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-info">Convert</button>
                 <button
                   type="button"
                   class="btn btn-outline-info"
