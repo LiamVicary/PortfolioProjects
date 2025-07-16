@@ -7,7 +7,7 @@ if (empty($_GET['country'])) {
     exit;
 }
 
-$country = urlencode($_GET['country']);
+$country = rawurlencode($_GET['country']);
 // fullText=true makes it match exact country names where possible
 $url = "https://restcountries.com/v3.1/name/{$country}?fullText=true";
 
