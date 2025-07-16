@@ -12,6 +12,8 @@ if (isset($_GET['q'])) {
          . "?q={$query}"
          . "&key={$OPENCAGE_KEY}"
          . "&limit={$limit}";
+         
+         
 }
 //REVERSE
 elseif (isset($_GET['lat']) && isset($_GET['lng'])) {
