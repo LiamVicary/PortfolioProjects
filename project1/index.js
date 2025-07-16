@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.airportCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.arenaCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.hospitalCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.universityCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.weirdAttractionCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
   window.parkCluster = L.markerClusterGroup({
     polygonOptions: {
       fillColor: "#EE8866",
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opacity: 1,
       fillOpacity: 0.2,
     },
-  });
+  }).addTo(map);
 
   const overlayMaps = {
     POIs: window.poiCluster,
@@ -701,87 +701,124 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // --------------------------------------CURRENCY MODAL--------------------------------------
 
+    // --- currency modal elements ---
     const currencyModalEl = document.getElementById("currencyModal");
-    const fromSelect = document.getElementById("fromCurrency");
-    const toSelect = document.getElementById("toCurrency");
     const amountInput = document.getElementById("inputAmount");
+    const fromInput = document.getElementById("fromCurrency");
+    const toSelect = document.getElementById("toCurrency");
+    const rateInfo = document.getElementById("modalOtherLocationName");
     const resultEl = document.getElementById("conversionResult");
 
-    // 1) detect user currency
+    // helper to get user locale currency (as you already had)
     async function getUserCurrency() {
-      if (!navigator.geolocation) return "USD";
+      if (!navigator.geolocation) return "GBP";
       return new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
             const { latitude: lat, longitude: lng } = pos.coords;
             const res = await fetch(`PHP/geocode.php?lat=${lat}&lng=${lng}`);
             const data = await res.json();
-            resolve(
-              data?.results?.[0]?.annotations?.currency?.iso_code || "USD"
-            );
+            const cc =
+              data?.results?.[0]?.components?.country_code?.toUpperCase();
+            if (cc) {
+              // fetch the currency ISO for that country
+              const curRes = await fetch(
+                `PHP/get_currency_rest.php?countryCode=${cc}`
+              );
+              const curData = await curRes.json();
+              return resolve(curData.iso || "GBP");
+            }
+            resolve("GBP");
           },
-          () => resolve("USD")
+          () => resolve("GBP")
         );
       });
     }
 
-    // 2) populate both <select>s
-    async function populateCurrencySelects() {
-      const userCurr = await getUserCurrency();
+    // main population + default-select routine
+    currencyModalEl.addEventListener("show.bs.modal", async () => {
+      // 1) fetch all rates
+      const resRates = await fetch("PHP/currencies_proxy.php");
+      const { rates } = await resRates.json();
 
-      // --- FROM: only USD ---
+      // 2) build BOTH “From” and “To” lists
+      const displayName = new Intl.DisplayNames(["en"], { type: "currency" });
+      const fromSelect = document.getElementById("fromCurrency");
+      const toSelect = document.getElementById("toCurrency");
       fromSelect.innerHTML = "";
-      fromSelect.append(new Option("USD", "USD"));
-
-      // --- TO: fetch your new proxy ---
       toSelect.innerHTML = "";
-      const res = await fetch("PHP/currencies_proxy.php");
-      const data = await res.json();
-
-      if (!data.rates) {
-        console.error("Rates API returned", data);
-        return;
+      for (let code of Object.keys(rates)) {
+        const label = `${code} — ${displayName.of(code)}`;
+        let o1 = new Option(label, code);
+        let o2 = new Option(label, code);
+        fromSelect.add(o1);
+        toSelect.add(o2);
       }
 
-      // Populate second select with currency codes
-      Object.keys(data.rates).forEach((code) => {
-        toSelect.append(new Option(code, code));
-      });
-
-      // Optionally pre-select the user’s currency (if it’s in the list)
-      if (data.rates[userCurr]) {
-        toSelect.value = userCurr;
+      // 3) default “From” to the user’s currency
+      const userCurr = await getUserCurrency();
+      if (rates[userCurr]) {
+        fromSelect.value = userCurr;
       }
-    }
 
-    // 3) when modal is shown, fill the dropdowns
-    currencyModalEl.addEventListener("show.bs.modal", populateCurrencySelects);
-
-    // 4) on form submit, do the conversion
-    document
-      .getElementById("currencyForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const amount = +amountInput.value;
-        const from = fromSelect.value;
-        const to = toSelect.value;
-        try {
-          const res = await fetch(
-            `PHP/convert_currency.php?from=${from}&to=${to}&amount=${amount}`
-          );
-          const { result } = await res.json();
-          if (result != null) {
-            resultEl.textContent = `${amount} ${from} = ${result.toFixed(
-              2
-            )} ${to}`;
-          } else {
-            resultEl.textContent = "Conversion failed";
-          }
-        } catch (err) {
-          resultEl.textContent = "Error";
-          console.error(err);
+      // 4) default the “To” selection to the selected country’s currency
+      const countryIdx = document.getElementById("countrySelect").selectedIndex;
+      const countryName =
+        document.getElementById("countrySelect").options[countryIdx].text;
+      try {
+        const resCurr = await fetch(
+          `PHP/get_currency_rest.php?country=${encodeURIComponent(countryName)}`
+        );
+        const currData = await resCurr.json();
+        // assume your PHP returns an `iso` field; if not, you can
+        // fetch via restcountries.com/v3.1/name...
+        if (currData.iso && rates[currData.iso]) {
+          toSelect.value = currData.iso;
         }
+      } catch (e) {
+        console.warn("Could not default to country currency", e);
+      }
+
+      // 5) trigger an initial calc
+      doConversion();
+    });
+
+    // recalc anytime the amount or “to” changes
+    amountInput.addEventListener("input", doConversion);
+    document
+      .getElementById("fromCurrency")
+      .addEventListener("change", doConversion);
+    document
+      .getElementById("toCurrency")
+      .addEventListener("change", doConversion);
+
+    // actual conversion logic
+    async function doConversion() {
+      const amount = parseFloat(amountInput.value) || 0;
+      const from = document.getElementById("fromCurrency").value;
+      const to = toSelect.value;
+
+      // re-fetch rates each time (or cache outside if you prefer)
+      const { rates } = await (await fetch("PHP/currencies_proxy.php")).json();
+
+      // compute
+      const rate = rates[to] / rates[from];
+      const converted = amount * rate;
+
+      rateInfo.textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+
+      // format with thousands separators AND exactly 2 decimal places:
+      const amtFormatted = amount.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
       });
+      const resFormatted = converted.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+      resultEl.textContent = `${amtFormatted} ${from} = ${resFormatted} ${to}`;
+    }
 
     // --------------------------------------FETCH AND DRAW COUNTRY BORDER GEOJSON--------------------------------------
     const borderUrl = `PHP/get_countries_border.php?iso=${encodeURIComponent(
@@ -1044,40 +1081,43 @@ document.addEventListener("DOMContentLoaded", () => {
             return true;
           });
 
-          // build your list from `unique`
-          const list = document.createElement("ul");
-          list.className = "list-group";
-          unique.forEach((a) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.innerHTML = `
-        <div class="d-flex align-items-start">
-          ${
-            a.image_url
-              ? `<img src="${a.image_url}" alt="${a.title}"
-                    class="me-3"
-                    style="width:80px; height:80px; object-fit:cover; border-radius:4px;">`
-              : ``
-          }
-          <div>
-            <a href="${a.link}"
-               target="_blank"
-               class="fw-bold d-block mb-1"
-               style="text-decoration:none; color:inherit;">
-              ${a.title}
-            </a>
-            <p class="mb-0 small text-muted">
-              ${a.source_id} •
-              ${new Date(a.pubDate).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      `;
-            list.appendChild(li);
-          });
-
+          // render each article as a Bootstrap card
           body.innerHTML = "";
-          body.appendChild(list);
+          unique.forEach((article) => {
+            const imgUrl = article.image_url || "images/stock-news.png";
+            const cardHTML = `
+              <div class="card mb-3">
+                <div class="row g-0">
+                  <div class="col-md-4">
+                    <img src="${imgUrl}"
+                         onerror="this.onerror=null;this.src='images/stock-news.png';"
+                         class="img-fluid rounded-start"
+                         alt="Article image">
+                  </div>
+                  <div class="col-md-8">
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <a href="${article.link}"
+                           target="_blank"
+                           rel="noopener"
+                           style="text-decoration:none; color:inherit;">
+                          ${article.title}
+                        </a>
+                      </h5>
+                      <p class="card-text">
+                        ${article.description || ""}
+                      </p>
+                      <p class="card-text">
+                        <small class="text-muted">
+                          ${new Date(article.pubDate).toLocaleString()}
+                        </small>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+            body.insertAdjacentHTML("beforeend", cardHTML);
+          });
         })
         .catch((err) => {
           console.error("News fetch error:", err);
@@ -1108,14 +1148,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.userMarker) {
           map.removeLayer(window.userMarker);
         }
-        window.userMarker = L.marker([lat, lng], {
-          icon: L.icon({
-            iconUrl: "images/you-are-here_tall.png", // your PNG file
-            iconSize: [33, 50], // width, height in pixels
-            iconAnchor: [17, 50], // point of the icon which corresponds to marker's location (half width, full height)
-            popupAnchor: [0, -32], // point from which popups will “open”, relative to iconAnchor
-          }),
-        }).addTo(map);
 
         const phpReverseUrl = `PHP/geocode.php?lat=${lat}&lng=${lng}`;
         fetch(phpReverseUrl)
@@ -1126,11 +1158,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .then((data) => {
             if (!(data.results && data.results.length)) return;
             const first = data.results[0];
-
-            // 1) Display the human-readable place
-            const place = first.formatted;
-            document.getElementById("modalLocationName").textContent = place;
-            //window.userMarker.bindPopup(`You are here: ${place}`).openPopup();
 
             // 2) Extract the ISO country code (we assume your PHP/OpenCage proxy returns components.country_code)
             const countryCode = (
