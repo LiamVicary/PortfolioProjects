@@ -1,8 +1,8 @@
 // ---------- State ----------
 const personnelFilters = {
-  empSort: [], // ["AZ"] or ["ZA"]
-  deptFilter: [], // e.g. ["Accounting", "Legal"]
-  locFilter: [], // e.g. ["London"]
+  empSort: [],
+  deptFilter: [],
+  locFilter: [],
 };
 
 let editFormBusy = false; // prevent double-submits
@@ -22,31 +22,31 @@ function loadPersonnel() {
     if (!res || res.status.code !== 200)
       return alert("Error loading personnel");
 
-    // 1) get the raw array
+    // get the raw array
     let list = res.data || [];
 
-    // 2) apply department-filter (if any)
+    // apply department-filter (if any)
     if (personnelFilters.deptFilter.length) {
       list = list.filter((p) =>
         personnelFilters.deptFilter.includes(p.department)
       );
     }
 
-    // 3) apply location-filter (if any)
+    // apply location-filter (if any)
     if (personnelFilters.locFilter.length) {
       list = list.filter((p) =>
         personnelFilters.locFilter.includes(p.location)
       );
     }
 
-    // 4) apply alphabetical sort (if any)
+    // apply alphabetical sort (if any)
     if (personnelFilters.empSort.includes("AZ")) {
       list.sort((a, b) => a.lastName.localeCompare(b.lastName));
     } else if (personnelFilters.empSort.includes("ZA")) {
       list.sort((a, b) => b.lastName.localeCompare(a.lastName));
     }
 
-    // 5) build HTML
+    // build HTML
     let html = "";
     list.forEach((p) => {
       html += `
@@ -126,7 +126,7 @@ $("#applyFilterBtn")
 $("#filterBtn")
   .off("click")
   .on("click", () => {
-    refreshFilterOptions(); // <- pull the latest depts/locations
+    refreshFilterOptions();
     $("#filterModal").modal("show");
   });
 
@@ -202,7 +202,7 @@ $("#addBtn")
 
       // reset to "Add" state
       $form[0].reset();
-      $("#editPersonnelEmployeeID").val(""); // empty id => INSERT
+      $("#editPersonnelEmployeeID").val("");
       $modal.find(".modal-title").text("Add Employee");
 
       // load departments then show modal
@@ -238,12 +238,11 @@ $("#addBtn")
     $("#locationModal").modal("show");
   });
 
-// On edit modal show: populate when opened from a row pencil (has data-id)
 $("#editPersonnelModal")
   .off("show.bs.modal")
   .on("show.bs.modal", function (e) {
     const id = $(e.relatedTarget)?.attr("data-id");
-    if (!id) return; // it's the Add flow; form already prepared above
+    if (!id) return;
 
     $.ajax({
       url: "libs/php/getPersonnelByID.php",
@@ -278,14 +277,13 @@ $("#editPersonnelModal")
     });
   });
 
-// Release lock if modal is closed (belt & braces)
+// Release lock if modal is closed
 $("#editPersonnelModal")
   .off("hidden.bs.modal")
   .on("hidden.bs.modal", () => {
     editFormBusy = false;
   });
 
-// Single submit handler for BOTH Add and Edit (delegated & namespaced)
 $(document)
   .off("submit.editForm")
   .on("submit.editForm", "#editPersonnelForm", function (e) {
@@ -301,7 +299,7 @@ $(document)
     );
     $saveBtn.prop("disabled", true);
 
-    const payload = $form.serialize(); // id empty => INSERT, id present => UPDATE
+    const payload = $form.serialize();
 
     $.post("libs/php/savePersonnel.php", payload, null, "json")
       .done(function (res) {
@@ -338,7 +336,6 @@ $("#editDepartmentModal")
     $name.val("");
     $loc.empty().append('<option value="" disabled selected>Loading…</option>');
 
-    // 1) Load locations for the select (JSON endpoint!)
     $.getJSON("libs/php/listLocationsJSON.php", function (locRes) {
       if (String(locRes?.status?.code) !== "200") {
         console.warn("Locations error:", locRes);
@@ -352,12 +349,11 @@ $("#editDepartmentModal")
         .append('<option value="" disabled selected>Select location…</option>');
       locations.forEach((l) => $loc.append(new Option(l.name, String(l.id))));
 
-      // 2) If editing, fetch the department details and prefill
       if (id) {
         $modal.find(".modal-title").text("Edit Department");
         $.ajax({
           url: "libs/php/getDepartmentByID.php",
-          type: "POST", // use POST in production
+          type: "POST",
           dataType: "json",
           data: { id },
           success: function (res) {
@@ -370,7 +366,7 @@ $("#editDepartmentModal")
               $id.val(d.id);
               $name.val(d.name);
 
-              // Preselect the location (force string compare & fallback)
+              // Preselect the location
               const locValue = String(d.locationID);
               if ($loc.find(`option[value="${locValue}"]`).length) {
                 $loc.val(locValue);
@@ -381,7 +377,7 @@ $("#editDepartmentModal")
                 );
                 $loc.prop("selectedIndex", 0);
               }
-              // If any UI depends on change event:
+
               $loc.trigger("change");
             } else {
               console.warn("Dept fetch error:", res);
@@ -407,7 +403,7 @@ $(document)
   .off("submit.editDeptForm")
   .on("submit.editDeptForm", "#editDepartmentForm", function (e) {
     e.preventDefault();
-    const payload = $(this).serialize(); // id empty => INSERT, id present => UPDATE
+    const payload = $(this).serialize();
     $.post(
       "libs/php/saveDepartment.php",
       payload,
@@ -432,7 +428,7 @@ $(document)
 $("#locationModal")
   .off("show.bs.modal")
   .on("show.bs.modal", function (e) {
-    const id = $(e.relatedTarget).data("id"); // comes from the pencil button
+    const id = $(e.relatedTarget).data("id");
     const $modal = $(this);
     const $form = $("#locationForm")[0];
 
@@ -454,12 +450,11 @@ $("#locationModal")
         alert("Error retrieving location details.");
       });
     } else {
-      // Optional: support "Add Location" using same modal
       $modal.find(".modal-title").text("Add Location");
     }
   });
 
-// Save (works for both Add and Edit depending on hidden id)
+// Save (for both Add and Edit depending on hidden id)
 $("#locationForm")
   .off("submit")
   .on("submit", function (e) {
@@ -567,7 +562,7 @@ $(document)
   .off("click.deleteDepartment")
   .on("click.deleteDepartment", ".deleteDepartmentBtn", function () {
     const id = $(this).data("id");
-    // optional: nicer confirm if you add data-name on the button
+
     if (!confirm("Really delete this department?")) return;
 
     $.post(
@@ -578,7 +573,6 @@ $(document)
           loadDepartments();
           refreshFilterOptions();
         } else {
-          // Show something meaningful if backend sent extra info
           const msg =
             res?.status?.description ||
             "Delete failed. The department may be in use.";
@@ -597,10 +591,6 @@ function sanitizeId(str) {
     .replace(/[^a-z0-9]+/g, "-");
 }
 
-/** Rebuilds Department & Location checkboxes using live data.
- *  Preserves current selections in `personnelFilters`.
- *  Also cleans out selections for items that were deleted.
- */
 function refreshFilterOptions() {
   const $deptWrap = $("#deptFilterContainer");
   const $locWrap = $("#locFilterContainer");
@@ -614,12 +604,12 @@ function refreshFilterOptions() {
       console.warn("Department list error:", res);
       return;
     }
-    // Use department *names* because your filtering compares by name
+
     const names = [
       ...new Set((res.data || []).map((d) => d.name).filter(Boolean)),
     ].sort((a, b) => a.localeCompare(b));
 
-    // Clean up selections that no longer exist (e.g., after a delete)
+    // Clean up selections that no longer exist
     personnelFilters.deptFilter = personnelFilters.deptFilter.filter((n) =>
       names.includes(n)
     );
@@ -651,7 +641,7 @@ function refreshFilterOptions() {
       console.warn("Location list error:", res);
       return;
     }
-    // Use location *names* because your filtering compares by name
+
     const names = [
       ...new Set((res.data || []).map((l) => l.name).filter(Boolean)),
     ].sort((a, b) => a.localeCompare(b));
