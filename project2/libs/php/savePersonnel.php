@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/db.php';
 include 'config.php';
 header('Content-Type: application/json');
 
