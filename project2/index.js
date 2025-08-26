@@ -16,6 +16,11 @@ function debounce(fn, delay) {
   };
 }
 
+// ---------- Delete Department (delegated) ----------
+function isOk(res) {
+  return res?.success === true || String(res?.status?.code) === "200";
+}
+
 // ---------- Data Loaders ----------
 function loadPersonnel() {
   $.getJSON("libs/php/getAll.php", function (res) {
@@ -100,8 +105,38 @@ function loadDepartments() {
 }
 
 function loadLocations() {
-  $.get("libs/php/listLocations.php", function (html) {
-    $("#locationTableBody").html(html);
+  $.getJSON("libs/php/listLocationsJSON.php", function (res) {
+    if (String(res?.status?.code) !== "200") {
+      console.warn("Locations response:", res);
+      alert("Error loading locations");
+      return;
+    }
+
+    const rows = (res.data || [])
+      .map(
+        (l) => `
+      <tr>
+        <td class="align-middle text-nowrap">${l.name}</td>
+        <td class="text-end text-nowrap">
+          <button type="button" class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal" data-bs-target="#locationModal"
+                  data-id="${l.id}">
+            <i class="fa-solid fa-pencil fa-fw"></i>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm delete-location"
+                  data-id="${l.id}">
+            <i class="fa-solid fa-trash fa-fw"></i>
+          </button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+
+    $("#locationTableBody").html(rows);
+  }).fail(function (xhr) {
+    console.warn("Locations XHR fail:", xhr?.responseText);
+    alert("Network/server error while loading locations.");
   });
 }
 
@@ -404,24 +439,51 @@ $(document)
   .on("submit.editDeptForm", "#editDepartmentForm", function (e) {
     e.preventDefault();
     const payload = $(this).serialize();
-    $.post(
-      "libs/php/saveDepartment.php",
-      payload,
-      function (res) {
-        if (String(res?.status?.code) === "200") {
+
+    $.ajax({
+      url: "libs/php/saveDepartment.php",
+      type: "POST",
+      data: payload,
+      dataType: "json", // expect JSON, but we'll gracefully handle parsererror
+    })
+      .done(function (res) {
+        if (isOk(res)) {
           $("#editDepartmentModal").modal("hide");
           loadDepartments();
           refreshFilterOptions();
         } else {
           alert(
-            "Error saving: " + (res?.status?.description || "Unknown error")
+            "Error saving: " +
+              (res?.status?.description || res?.message || "Unknown error")
           );
         }
-      },
-      "json"
-    ).fail(function () {
-      alert("Network/server error while saving department.");
-    });
+      })
+      .fail(function (xhr, textStatus, errorThrown) {
+        // If server returned 2xx but not valid JSON, jQuery calls this with parsererror.
+        if (
+          xhr.status >= 200 &&
+          xhr.status < 300 &&
+          textStatus === "parsererror"
+        ) {
+          console.warn(
+            "saveDepartment returned non-JSON but HTTP",
+            xhr.status,
+            "— treating as success."
+          );
+          $("#editDepartmentModal").modal("hide");
+          loadDepartments();
+          refreshFilterOptions();
+          return;
+        }
+
+        console.warn(
+          "Save department fail:",
+          textStatus,
+          errorThrown,
+          xhr?.responseText
+        );
+        alert("Network/server error while saving department.");
+      });
   });
 
 // Open modal and prefill from server
@@ -526,7 +588,7 @@ $(document)
     if (!confirm("Really delete this location?")) return;
     const id = $(this).data("id");
     $.post(
-      "php/deleteLocation.php",
+      "libs/php/deleteLocation.php",
       { id },
       function (res) {
         if (res && res.success) loadLocations();
@@ -552,11 +614,6 @@ $(document)
       "json"
     );
   });
-
-// ---------- Delete Department (delegated) ----------
-function isOk(res) {
-  return String(res?.status?.code) === "200";
-}
 
 $(document)
   .off("click.deleteDepartment")
