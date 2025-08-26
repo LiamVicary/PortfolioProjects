@@ -1,38 +1,28 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+declare(strict_types=1);
+ini_set('display_errors','1'); error_reporting(E_ALL);
 
-include 'config.php';
+header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/config.php';
 
-// 1) Fetch all locations
-$res = $conn->query('SELECT id, name FROM location ORDER BY name');
-if (! $res) {
-    // in case the query fails
-    die("Database error: " . $conn->error);
+$conn->set_charset('utf8mb4');
+
+$sql = 'SELECT id, name FROM location ORDER BY name';
+$res = $conn->query($sql);
+
+if (!$res) {
+  http_response_code(500);
+  echo json_encode([
+    'status' => ['code' => 500, 'description' => 'Query failed'],
+    'data' => []
+  ]);
+  exit;
 }
 
-// 2) Turn result set into an array
-$locations = $res->fetch_all(MYSQLI_ASSOC);
+$data = $res->fetch_all(MYSQLI_ASSOC);
+foreach ($data as &$row) { $row['id'] = (int)$row['id']; }
 
-// 3) Loop and emit the new Bootstrap-5–styled rows
-foreach ($locations as $loc) {
-    echo "<tr>
-            <td class=\"align-middle text-nowrap\">{$loc['name']}</td>
-            <td class=\"text-end text-nowrap\">
-              <button
-                type=\"button\"
-                class=\"btn btn-primary btn-sm\"
-                data-bs-toggle=\"modal\"
-                data-bs-target=\"#locationModal\"
-                data-id=\"{$loc['id']}\">
-                <i class=\"fa-solid fa-pencil fa-fw\"></i>
-              </button>
-              <button
-                type=\"button\"
-                class=\"btn btn-primary btn-sm delete-location\"
-                data-id=\"{$loc['id']}\">
-                <i class=\"fa-solid fa-trash fa-fw\"></i>
-              </button>
-            </td>
-          </tr>";
-}
+echo json_encode([
+  'status' => ['code' => 200, 'description' => 'OK'],
+  'data' => $data
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
