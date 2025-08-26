@@ -1,17 +1,16 @@
-
 <?php
 
 	// connection details for MySQL database
 
-	$cd_host = "127.0.0.1";
+	$cd_host = "db5018477798.hosting-data.io";
 	$cd_port = 3306;
 	$cd_socket = "";
 
 	// database name, username and password
 
-	$cd_dbname = "companydirectory";
-	$cd_user = "root";
-	$cd_password = "";
+	$cd_dbname = "dbs14682477";
+	$cd_user = "dbu846743";
+	$cd_password = "VaultTecBobblehead1337!";
 
 
 	$conn = new mysqli(
@@ -22,6 +21,5 @@
     $cd_port,
     $cd_socket
 );
-
-
+?>
 
