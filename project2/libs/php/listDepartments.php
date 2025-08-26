@@ -1,6 +1,6 @@
 <?php
-ini_set('display_errors',1);
-error_reporting(E_ALL);
+//ini_set('display_errors',1);
+//error_reporting(E_ALL);
 include 'config.php';
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -24,3 +24,4 @@ echo json_encode([
   'status'=>['code'=>200,'name'=>'ok','description'=>'success'],
   'data'=>$data
 ]);
+?>
