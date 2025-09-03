@@ -25,7 +25,7 @@ function isOk(res) {
 function loadPersonnel() {
   $.getJSON("libs/php/getAll.php", function (res) {
     if (!res || res.status.code !== 200)
-      return alert("Error loading personnel");
+      $("#errorLoadPersonnelModal").modal("show");
 
     // get the raw array
     let list = res.data || [];
@@ -51,56 +51,110 @@ function loadPersonnel() {
       list.sort((a, b) => b.lastName.localeCompare(a.lastName));
     }
 
-    // build HTML
-    let html = "";
+    // build rows via DocumentFragment
+    const tbody = document.getElementById("personnelTableBody");
+    tbody.textContent = "";
+    const frag = document.createDocumentFragment();
+
     list.forEach((p) => {
-      html += `
-      <tr>
-        <td class="align-middle text-nowrap">${p.lastName}, ${p.firstName}</td>
-        <td class="align-middle text-nowrap d-none d-md-table-cell">${p.department}</td>
-        <td class="align-middle text-nowrap d-none d-md-table-cell">${p.location}</td>
-        <td class="align-middle text-nowrap d-none d-md-table-cell">${p.email}</td>
-        <td class="text-end text-nowrap">
-          <button class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editPersonnelModal"
-                  data-id="${p.id}">
-            <i class="fa-solid fa-pencil fa-fw"></i>
-          </button>
-          <button class="btn btn-primary btn-sm deletePersonnelBtn" data-id="${p.id}">
-            <i class="fa-solid fa-trash fa-fw"></i>
-          </button>
-        </td>
-      </tr>`;
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.className = "align-middle text-nowrap";
+      tdName.textContent = `${p.lastName}, ${p.firstName}`;
+      tr.append(tdName);
+
+      const tdDept = document.createElement("td");
+      tdDept.className = "align-middle text-nowrap d-none d-md-table-cell";
+      tdDept.textContent = p.department;
+      tr.append(tdDept);
+
+      const tdLoc = document.createElement("td");
+      tdLoc.className = "align-middle text-nowrap d-none d-md-table-cell";
+      tdLoc.textContent = p.location;
+      tr.append(tdLoc);
+
+      const tdEmail = document.createElement("td");
+      tdEmail.className = "align-middle text-nowrap d-none d-md-table-cell";
+      tdEmail.textContent = p.email;
+      tr.append(tdEmail);
+
+      const tdActions = document.createElement("td");
+      tdActions.className = "text-end text-nowrap";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-primary btn-sm me-2";
+      editBtn.setAttribute("data-bs-toggle", "modal");
+      editBtn.setAttribute("data-bs-target", "#editPersonnelModal");
+      editBtn.dataset.id = p.id;
+      const editIcon = document.createElement("i");
+      editIcon.className = "fa-solid fa-pencil fa-fw";
+      editBtn.append(editIcon);
+      tdActions.append(editBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-primary btn-sm deletePersonnelBtn";
+      delBtn.dataset.id = p.id;
+      const delIcon = document.createElement("i");
+      delIcon.className = "fa-solid fa-trash fa-fw";
+      delBtn.append(delIcon);
+      tdActions.append(delBtn);
+
+      tr.append(tdActions);
+      frag.append(tr);
     });
-    $("#personnelTableBody").html(html);
+
+    tbody.append(frag);
   });
 }
 
 function loadDepartments() {
   $.getJSON("libs/php/listDepartments.php", function (res) {
     if (!res || res.status.code !== 200)
-      return alert("Error loading departments");
-    let html = "";
+      $("#errorLoadDepartmentsModal").modal("show");
+    const tbody = document.getElementById("departmentTableBody");
+    tbody.textContent = "";
+    const frag = document.createDocumentFragment();
+
     (res.data || []).forEach((d) => {
-      html += `
-        <tr>
-          <td class="align-middle text-nowrap">${d.name}</td>
-          <td class="align-middle text-nowrap d-none d-md-table-cell">${d.location}</td>
-          <td class="text-end text-nowrap">
-            <button class="btn btn-primary btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editDepartmentModal"
-                    data-id="${d.id}">
-              <i class="fa-solid fa-pencil fa-fw"></i>
-            </button>
-            <button class="btn btn-primary btn-sm deleteDepartmentBtn" data-id="${d.id}">
-              <i class="fa-solid fa-trash fa-fw"></i>
-            </button>
-          </td>
-        </tr>`;
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.className = "align-middle text-nowrap";
+      tdName.textContent = d.name;
+      tr.append(tdName);
+
+      const tdLoc = document.createElement("td");
+      tdLoc.className = "align-middle text-nowrap d-none d-md-table-cell";
+      tdLoc.textContent = d.location;
+      tr.append(tdLoc);
+
+      const tdActions = document.createElement("td");
+      tdActions.className = "text-end text-nowrap";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-primary btn-sm me-2";
+      editBtn.setAttribute("data-bs-toggle", "modal");
+      editBtn.setAttribute("data-bs-target", "#editDepartmentModal");
+      editBtn.dataset.id = d.id;
+      const editIcon = document.createElement("i");
+      editIcon.className = "fa-solid fa-pencil fa-fw";
+      editBtn.append(editIcon);
+      tdActions.append(editBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-primary btn-sm deleteDepartmentBtn";
+      delBtn.dataset.id = d.id;
+      const delIcon = document.createElement("i");
+      delIcon.className = "fa-solid fa-trash fa-fw";
+      delBtn.append(delIcon);
+      tdActions.append(delBtn);
+
+      tr.append(tdActions);
+      frag.append(tr);
     });
-    $("#departmentTableBody").html(html);
+
+    tbody.append(frag);
   });
 }
 
@@ -108,62 +162,95 @@ function loadLocations() {
   $.getJSON("libs/php/listLocationsJSON.php", function (res) {
     if (String(res?.status?.code) !== "200") {
       console.warn("Locations response:", res);
-      alert("Error loading locations");
+      $("#errorNetworkLoadLocationsModal").modal("show");
       return;
     }
+    const tbody = document.getElementById("locationTableBody");
+    tbody.textContent = "";
+    const frag = document.createDocumentFragment();
 
-    const rows = (res.data || [])
-      .map(
-        (l) => `
-      <tr>
-        <td class="align-middle text-nowrap">${l.name}</td>
-        <td class="text-end text-nowrap">
-          <button type="button" class="btn btn-primary btn-sm"
-                  data-bs-toggle="modal" data-bs-target="#locationModal"
-                  data-id="${l.id}">
-            <i class="fa-solid fa-pencil fa-fw"></i>
-          </button>
-          <button type="button" class="btn btn-primary btn-sm delete-location"
-                  data-id="${l.id}">
-            <i class="fa-solid fa-trash fa-fw"></i>
-          </button>
-        </td>
-      </tr>
-    `
-      )
-      .join("");
+    (res.data || []).forEach((l) => {
+      const tr = document.createElement("tr");
 
-    $("#locationTableBody").html(rows);
+      const tdName = document.createElement("td");
+      tdName.className = "align-middle text-nowrap";
+      tdName.textContent = l.name;
+      tr.append(tdName);
+
+      const tdActions = document.createElement("td");
+      tdActions.className = "text-end text-nowrap";
+
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-primary btn-sm me-2";
+      editBtn.setAttribute("data-bs-toggle", "modal");
+      editBtn.setAttribute("data-bs-target", "#locationModal");
+      editBtn.dataset.id = l.id;
+      const editIcon = document.createElement("i");
+      editIcon.className = "fa-solid fa-pencil fa-fw";
+      editBtn.append(editIcon);
+      tdActions.append(editBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn btn-primary btn-sm delete-location";
+      delBtn.dataset.id = l.id;
+      const delIcon = document.createElement("i");
+      delIcon.className = "fa-solid fa-trash fa-fw";
+      delBtn.append(delIcon);
+      tdActions.append(delBtn);
+
+      tr.append(tdActions);
+      frag.append(tr);
+    });
+
+    tbody.append(frag);
   }).fail(function (xhr) {
     console.warn("Locations XHR fail:", xhr?.responseText);
-    alert("Network/server error while loading locations.");
+    $("#errorNetworkLoadLocationsModal").modal("show");
   });
 }
 
-// ---------- Filters & Search ----------
-$("#applyFilterBtn")
-  .off("click")
-  .on("click", () => {
-    personnelFilters.empSort = $("input[name='empSort']:checked")
-      .map((_, cb) => cb.value)
-      .get();
-    personnelFilters.deptFilter = $("input[name='deptFilter']:checked")
-      .map((_, cb) => cb.value)
-      .get();
-    personnelFilters.locFilter = $("input[name='locFilter']:checked")
-      .map((_, cb) => cb.value)
-      .get();
+// 1) Helper: enable/disable the Filter button based on active tab
+function updateFilterBtnState() {
+  const onPersonnel = $("#personnelBtn").hasClass("active");
+  const $btn = $("#filterBtn");
 
-    $("#filterModal").modal("hide");
-    loadPersonnel();
-  });
+  // availability
+  $btn.prop("disabled", !onPersonnel).toggleClass("disabled", !onPersonnel);
 
+  // color: green when any filter is active
+  const hasFilter =
+    (personnelFilters.deptFilter && personnelFilters.deptFilter.length > 0) ||
+    (personnelFilters.locFilter && personnelFilters.locFilter.length > 0);
+
+  $btn
+    .toggleClass("btn-success", hasFilter)
+    .toggleClass("btn-primary", !hasFilter);
+}
+
+// 2) Guard the Filter button click (no modal unless Personnel is active)
 $("#filterBtn")
   .off("click")
   .on("click", () => {
+    if ($("#filterBtn").prop("disabled")) return; // do nothing if not on Personnel
     refreshFilterOptions();
     $("#filterModal").modal("show");
   });
+
+// 3) Update the button state whenever tabs change
+$('#myTab button[data-bs-toggle="tab"]').on(
+  "shown.bs.tab",
+  updateFilterBtnState
+);
+
+// 4) Initialize on page load
+$(function () {
+  loadPersonnel(); // default tab
+  updateFilterBtnState(); // Filter starts enabled & opaque only on Personnel
+});
+
+// ---------- Filters & Search ----------
 
 $("#searchInp")
   .off("keyup")
@@ -179,9 +266,10 @@ $("#searchInp")
 
       $.getJSON("libs/php/searchAll.php", { txt }, function (res) {
         if (!res || res.status.code != 200) {
-          return alert(
-            "Search error: " + (res?.status?.description || "unknown")
+          $("#errorSearchDetail").text(
+            res?.status?.description || "Unknown error"
           );
+          $("#errorSearchModal").modal("show");
         }
         let html = "";
         (res.data?.found || []).forEach((p) => {
@@ -192,7 +280,7 @@ $("#searchInp")
           <td class="align-middle text-nowrap d-none d-md-table-cell">${p.locationName}</td>
           <td class="align-middle text-nowrap d-none d-md-table-cell">${p.email}</td>
           <td class="text-end text-nowrap">
-            <button class="btn btn-primary btn-sm"
+            <button class="btn btn-primary btn-sm me-2"
                     data-bs-toggle="modal"
                     data-bs-target="#editPersonnelModal"
                     data-id="${p.id}">
@@ -224,40 +312,21 @@ $("#refreshBtn")
     if ($("#personnelBtn").hasClass("active")) loadPersonnel();
     else if ($("#departmentsBtn").hasClass("active")) loadDepartments();
     else loadLocations();
+    updateFilterBtnState();
   });
 
 // ---------- Add / Edit Personnel ----------
 $("#addBtn")
   .off("click")
   .on("click", function () {
+    // Personnel tab
     if ($("#personnelBtn").hasClass("active")) {
-      const $modal = $("#editPersonnelModal");
-      const $form = $("#editPersonnelForm");
-      const $dept = $("#editPersonnelDepartment");
-
-      // reset to "Add" state
-      $form[0].reset();
-      $("#editPersonnelEmployeeID").val("");
-      $modal.find(".modal-title").text("Add Employee");
-
-      // load departments then show modal
-      $.getJSON("libs/php/listDepartments.php", function (res) {
-        if (!res || res.status.code !== 200) {
-          alert("Error loading departments");
-          return;
-        }
-        $dept
-          .empty()
-          .append(
-            '<option value="" disabled selected>Select department…</option>'
-          );
-        (res.data || []).forEach((d) => $dept.append(new Option(d.name, d.id)));
-        $modal.modal("show");
-      });
-
+      // 👉 Let the modal's show.bs.modal handler do the fetching/populating
+      $("#editPersonnelModal").modal("show");
       return;
     }
 
+    // Departments tab
     if ($("#departmentsBtn").hasClass("active")) {
       $("#editDepartmentModal").find("form")[0].reset();
       $("#editDepartmentModal [data-id]").removeAttr("data-id");
@@ -274,49 +343,75 @@ $("#addBtn")
   });
 
 $("#editPersonnelModal")
-  .off("show.bs.modal")
-  .on("show.bs.modal", function (e) {
-    const id = $(e.relatedTarget)?.attr("data-id");
-    if (!id) return;
+  .off("show.bs.modal.personnel")
+  .on("show.bs.modal.personnel", function (e) {
+    const id = $(e.relatedTarget)?.data("id"); // undefined for Add
+    const $modal = $(this);
+    const $form = $("#editPersonnelForm")[0];
+    const $dept = $("#editPersonnelDepartment");
 
-    $.ajax({
-      url: "libs/php/getPersonnelByID.php",
-      type: "POST",
-      dataType: "json",
-      data: { id },
-      success: function (result) {
-        const resultCode = result?.status?.code;
-        if (resultCode == 200) {
-          const p = result.data.personnel[0];
+    // Always rebuild the department list fresh
+    $dept
+      .empty()
+      .append('<option value="" disabled selected>Loading…</option>');
+    $.getJSON("libs/php/listDepartments.php", function (res) {
+      if (String(res?.status?.code) !== "200")
+        $("#errorLoadDepartmentsModal").modal("show");
+      $dept
+        .empty()
+        .append(
+          '<option value="" disabled selected>Select department…</option>'
+        );
+      (res.data || []).forEach((d) => $dept.append(new Option(d.name, d.id)));
 
-          $("#editPersonnelEmployeeID").val(p.id);
-          $("#editPersonnelFirstName").val(p.firstName);
-          $("#editPersonnelLastName").val(p.lastName);
-          $("#editPersonnelJobTitle").val(p.jobTitle);
-          $("#editPersonnelEmailAddress").val(p.email);
+      if (id) {
+        // Edit: fetch employee details
+        $modal.find(".modal-title").text("Edit employee");
+        $.post(
+          "libs/php/getPersonnelByID.php",
+          { id },
+          function (result) {
+            if (String(result?.status?.code) !== "200")
+              $("#errorRetrievingDataModal").modal("show");
+            const p = result.data.personnel?.[0];
+            if (!p) {
+              $("#errorRetrievingDataModal").modal("show");
+              return;
+            }
 
-          const $dept = $("#editPersonnelDepartment");
-          $dept.empty();
-          $.each(result.data.department, function () {
-            $dept.append($("<option>", { value: this.id, text: this.name }));
-          });
-          $dept.val(p.departmentID);
-          $(this).find(".modal-title").text("Edit employee");
-        } else {
-          alert("Error retrieving data");
-        }
-      },
-      error: function () {
-        alert("Error retrieving data");
-      },
-    });
+            $("#editPersonnelEmployeeID").val(p.id);
+            $("#editPersonnelFirstName").val(p.firstName);
+            $("#editPersonnelLastName").val(p.lastName);
+            $("#editPersonnelJobTitle").val(p.jobTitle);
+            $("#editPersonnelEmailAddress").val(p.email);
+            $dept.val(p.departmentID);
+          },
+          "json"
+        ).fail(() => alert("Error retrieving data"));
+      } else {
+        // Add
+        $modal.find(".modal-title").text("Add Employee");
+        $form.reset();
+        $("#editPersonnelEmployeeID").val("");
+      }
+    }).fail(() => alert("Error loading departments"));
   });
 
 // Release lock if modal is closed
 $("#editPersonnelModal")
-  .off("hidden.bs.modal")
-  .on("hidden.bs.modal", () => {
+  .off("hidden.bs.modal.personnel")
+  .on("hidden.bs.modal.personnel", function () {
+    const $form = $("#editPersonnelForm")[0];
+    if ($form) $form.reset();
+    $("#editPersonnelEmployeeID").val("");
+    $("#editPersonnelDepartment").empty(); // rebuilt on next show
+    $(
+      "#editPersonnelForm .is-invalid, #editPersonnelForm .is-valid"
+    ).removeClass("is-invalid is-valid");
     editFormBusy = false;
+    $(this)
+      .find("button[form='editPersonnelForm'][type='submit']")
+      .prop("disabled", false);
   });
 
 $(document)
@@ -346,7 +441,7 @@ $(document)
         }
       })
       .fail(function () {
-        alert("Network/server error while saving.");
+        $("#errorNetworkSavePersonnelModal").modal("show");
       })
       .always(function () {
         editFormBusy = false;
@@ -374,7 +469,7 @@ $("#editDepartmentModal")
     $.getJSON("libs/php/listLocationsJSON.php", function (locRes) {
       if (String(locRes?.status?.code) !== "200") {
         console.warn("Locations error:", locRes);
-        alert("Error loading locations");
+        $("#errorNetworkLoadLocationsModal").modal("show");
         return;
       }
 
@@ -416,12 +511,12 @@ $("#editDepartmentModal")
               $loc.trigger("change");
             } else {
               console.warn("Dept fetch error:", res);
-              alert("Error retrieving department details");
+              $("#errorDeptDetailsModal").modal("show");
             }
           },
           error: function (xhr) {
             console.warn("Dept fetch XHR error:", xhr);
-            alert("Error retrieving department details");
+            $("#errorDeptDetailsModal").modal("show");
           },
         });
       } else {
@@ -429,7 +524,7 @@ $("#editDepartmentModal")
       }
     }).fail(function (xhr) {
       console.warn("Locations XHR error:", xhr);
-      alert("Error loading locations");
+      $("#errorNetworkLoadLocationsModal").modal("show");
     });
   });
 
@@ -487,77 +582,61 @@ $(document)
   });
 
 // Open modal and prefill from server
+//$("#locationModal")
+//.off("show.bs.modal")
+//.on("show.bs.modal", function (e) {
+//const id = $(e.relatedTarget).data("id");
+//const $modal = $(this);
+//const $form = $("#locationForm")[0];
+
+// reset
+//$form.reset();
+// $("#locationId").val("");
+// $("#locationName").val("");
+
+// if (id) {
+// $modal.find(".modal-title").text("Edit Location");
+// $.getJSON("libs/php/getLocation.php", { id }, function (data) {
+//   if (data && data.id) {
+//    $("#locationId").val(data.id);
+//    $("#locationName").val(data.name);
+//  } else {
+//    alert("Location not found.");
+//  }
+// }).fail(function () {
+//   alert("Error retrieving location details.");
+// });
+//  } else {
+//    $modal.find(".modal-title").text("Add Location");
+//  }
+// });
+
+// Save (for both Add and Edit depending on hidden id)
 $("#locationModal")
-  .off("show.bs.modal")
-  .on("show.bs.modal", function (e) {
-    const id = $(e.relatedTarget).data("id");
+  .off("show.bs.modal.location")
+  .on("show.bs.modal.location", function (e) {
+    const id = $(e.relatedTarget)?.data("id");
     const $modal = $(this);
     const $form = $("#locationForm")[0];
 
-    // reset
     $form.reset();
-    $("#locationId").val("");
     $("#locationName").val("");
 
     if (id) {
+      // Edit
+      $("#locationId").prop("disabled", false).val(id);
       $modal.find(".modal-title").text("Edit Location");
       $.getJSON("libs/php/getLocation.php", { id }, function (data) {
         if (data && data.id) {
-          $("#locationId").val(data.id);
           $("#locationName").val(data.name);
         } else {
-          alert("Location not found.");
+          $("#errorLocationNotFoundModal").modal("show");
         }
-      }).fail(function () {
-        alert("Error retrieving location details.");
-      });
+      }).fail(() => alert("Error retrieving location details."));
     } else {
+      // Add (exception: no DB query needed)
+      $("#locationId").prop("disabled", true).val(""); // disabled so it isn't posted
       $modal.find(".modal-title").text("Add Location");
-    }
-  });
-
-// Save (for both Add and Edit depending on hidden id)
-$("#locationForm")
-  .off("submit")
-  .on("submit", function (e) {
-    e.preventDefault();
-    const payload = $(this).serialize();
-    $.post(
-      "libs/php/saveLocation.php",
-      payload,
-      function (res) {
-        if (res && res.success) {
-          $("#locationModal").modal("hide");
-          loadLocations(); // refresh table
-          refreshFilterOptions();
-        } else {
-          alert(res?.message || "Error saving location");
-        }
-      },
-      "json"
-    ).fail(function () {
-      alert("Network/server error while saving location.");
-    });
-  });
-
-// ---------- Locations CRUD ----------
-$("#locationModal")
-  .off("show.bs.modal")
-  .on("show.bs.modal", function (e) {
-    const btn = $(e.relatedTarget);
-    const id = btn?.data("id");
-    const modal = $(this);
-
-    if (id) {
-      modal.find(".modal-title").text("Edit Location");
-      $.getJSON("libs/php/getLocation.php", { id }, function (data) {
-        modal.find("#locationId").val(data.id);
-        modal.find("#locationName").val(data.name);
-      });
-    } else {
-      modal.find(".modal-title").text("Add Location");
-      modal.find("#locationForm")[0].reset();
-      modal.find("#locationId").val("");
     }
   });
 
@@ -579,48 +658,162 @@ $("#locationForm")
         }
       },
       "json"
-    );
+    ).fail(() => alert("Network/server error while saving location."));
   });
 
+// Delete modals — clear the IDs and names (optional but tidy)
+$("#areYouSurePersonnelModal")
+  .off("hidden.bs.modal.personnelDel")
+  .on("hidden.bs.modal.personnelDel", function () {
+    $("#areYouSurePersonnelID").val("");
+    $("#areYouSurePersonnelName").text("");
+  });
+
+$("#areYouSureDeleteDepartmentModal")
+  .off("hidden.bs.modal.deptDel")
+  .on("hidden.bs.modal.deptDel", function () {
+    $("#deleteDepartmentID").val("");
+    $("#areYouSureDeptName").text("");
+  });
+
+$("#areYouSureDeleteLocationModal")
+  .off("hidden.bs.modal.locDel")
+  .on("hidden.bs.modal.locDel", function () {
+    $("#deleteLocationID").val("");
+    $("#areYouSureLocationName").text("");
+  });
+
+$("#cantDeleteDepartmentModal, #cantDeleteLocationModal")
+  .off("hidden.bs.modal.cantDel")
+  .on("hidden.bs.modal.cantDel", function () {
+    // clear counts/names
+    $("#cantDeleteDeptName, #cantDeleteLocationName").text("");
+    $("#personnelCount, #departmentCount").text("");
+  });
+
+// Ask to delete (opens modal prefilled)
 $(document)
-  .off("click.deleteLocation")
-  .on("click.deleteLocation", ".delete-location", function () {
-    if (!confirm("Really delete this location?")) return;
+  .off("click.askDeleteLocation")
+  .on("click.askDeleteLocation", ".delete-location", function () {
     const id = $(this).data("id");
+    const name = $(this).closest("tr").find("td").first().text().trim();
+
+    $("#deleteLocationID").val(id);
+    $("#areYouSureLocationName").text(name);
+    $("#areYouSureDeleteLocationModal").modal("show");
+  });
+
+// Submit from the modal
+$(document)
+  .off("submit.deleteLocationForm")
+  .on("submit.deleteLocationForm", "#deleteLocationForm", function (e) {
+    e.preventDefault();
+    const id = $("#deleteLocationID").val();
+    const name = $("#areYouSureLocationName").text();
+
     $.post(
       "libs/php/deleteLocation.php",
       { id },
       function (res) {
-        if (res && res.success) loadLocations();
-        else alert(res?.message || "Error deleting location");
+        if (res && res.success) {
+          loadLocations();
+          refreshFilterOptions();
+        } else {
+          const count =
+            res?.data?.departmentCount ?? res?.departmentCount ?? "one or more";
+          $("#cantDeleteLocationName").text(name);
+          $("#departmentCount").text(count);
+          $("#cantDeleteLocationModal").modal("show");
+        }
       },
       "json"
-    );
+    ).fail(function () {
+      $("#cantDeleteLocationName").text(name);
+      $("#departmentCount").text("one or more");
+      $("#cantDeleteLocationModal").modal("show");
+    });
   });
 
-// ---------- Delete Personnel (delegated) ----------
+// ---------- Delete Personnel (via modal) ----------
 $(document)
   .off("click.deletePersonnel")
   .on("click.deletePersonnel", ".deletePersonnelBtn", function () {
-    if (!confirm("Really delete this person?")) return;
     const id = $(this).data("id");
-    $.post(
-      "libs/php/deletePersonnel.php",
-      { id },
-      function (res) {
-        if (res && res.success) loadPersonnel();
-        else alert("Cannot delete: " + (res?.message || "Unknown error"));
-      },
-      "json"
-    );
+
+    // Prefill the modal with name (fallback to ID if fetch fails)
+    $.ajax({
+      url: "libs/php/getPersonnelByID.php",
+      type: "POST",
+      dataType: "json",
+      data: { id },
+    })
+      .done(function (res) {
+        const p = res?.data?.personnel?.[0];
+        const fullName = p ? `${p.firstName} ${p.lastName}` : `ID ${id}`;
+        $("#areYouSurePersonnelID").val(id);
+        $("#areYouSurePersonnelName").text(fullName);
+        $("#areYouSurePersonnelModal").modal("show");
+      })
+      .fail(function () {
+        $("#areYouSurePersonnelID").val(id);
+        $("#areYouSurePersonnelName").text(`ID ${id}`);
+        $("#areYouSurePersonnelModal").modal("show");
+      });
   });
 
 $(document)
-  .off("click.deleteDepartment")
-  .on("click.deleteDepartment", ".deleteDepartmentBtn", function () {
-    const id = $(this).data("id");
+  .off("submit.areYouSurePersonnelForm")
+  .on(
+    "submit.areYouSurePersonnelForm",
+    "#areYouSurePersonnelForm",
+    function (e) {
+      e.preventDefault();
+      const id = $("#areYouSurePersonnelID").val();
+      const $modal = $("#areYouSurePersonnelModal");
+      const $yesBtn = $modal.find(
+        "button[form='areYouSurePersonnelForm'][type='submit']"
+      );
 
-    if (!confirm("Really delete this department?")) return;
+      $yesBtn.prop("disabled", true);
+
+      $.post(
+        "libs/php/deletePersonnel.php",
+        { id },
+        function (res) {
+          if (res && res.success) {
+            $modal.modal("hide");
+            loadPersonnel();
+          } else {
+            alert("Cannot delete: " + (res?.message || "Unknown error"));
+          }
+        },
+        "json"
+      ).always(function () {
+        $yesBtn.prop("disabled", false);
+      });
+    }
+  );
+
+// ---------- Delete Department (show "can't delete" modal on failure) ----------
+// Ask to delete (opens modal prefilled)
+$(document)
+  .off("click.askDeleteDept")
+  .on("click.askDeleteDept", ".deleteDepartmentBtn", function () {
+    const id = $(this).data("id");
+    const name = $(this).closest("tr").find("td").first().text().trim();
+
+    $("#deleteDepartmentID").val(id);
+    $("#areYouSureDeptName").text(name);
+    $("#areYouSureDeleteDepartmentModal").modal("show");
+  });
+
+// Submit from the modal
+$(document)
+  .off("submit.deleteDeptForm")
+  .on("submit.deleteDeptForm", "#deleteDepartmentForm", function (e) {
+    e.preventDefault();
+    const id = $("#deleteDepartmentID").val();
+    const name = $("#areYouSureDeptName").text();
 
     $.post(
       "libs/php/deleteDepartmentByID.php",
@@ -630,15 +823,20 @@ $(document)
           loadDepartments();
           refreshFilterOptions();
         } else {
-          const msg =
-            res?.status?.description ||
-            "Delete failed. The department may be in use.";
-          alert(msg);
+          // Use count if backend provides it; otherwise “one or more”
+          const count =
+            res?.data?.personnelCount ?? res?.personnelCount ?? "one or more";
+          $("#cantDeleteDeptName").text(name);
+          $("#personnelCount").text(count);
+          $("#cantDeleteDepartmentModal").modal("show");
         }
       },
       "json"
     ).fail(function () {
-      alert("Server error while deleting department.");
+      // Network/server error — show a friendly modal message
+      $("#cantDeleteDeptName").text(name);
+      $("#personnelCount").text("one or more");
+      $("#cantDeleteDepartmentModal").modal("show");
     });
   });
 
@@ -649,86 +847,80 @@ function sanitizeId(str) {
 }
 
 function refreshFilterOptions() {
-  const $deptWrap = $("#deptFilterContainer");
-  const $locWrap = $("#locFilterContainer");
+  const $deptSel = $("#filterDepartment");
+  const $locSel = $("#filterLocation");
 
-  const selectedDepts = new Set(personnelFilters.deptFilter || []);
-  const selectedLocs = new Set(personnelFilters.locFilter || []);
+  // Use current state (names) or "All"
+  const currentDept = personnelFilters.deptFilter[0] || "0";
+  const currentLoc = personnelFilters.locFilter[0] || "0";
 
   // ---- Departments ----
   $.getJSON("libs/php/listDepartments.php", function (res) {
-    if (String(res?.status?.code) !== "200") {
-      console.warn("Department list error:", res);
-      return;
-    }
+    if (String(res?.status?.code) !== "200") return;
 
     const names = [
       ...new Set((res.data || []).map((d) => d.name).filter(Boolean)),
     ].sort((a, b) => a.localeCompare(b));
 
-    // Clean up selections that no longer exist
-    personnelFilters.deptFilter = personnelFilters.deptFilter.filter((n) =>
-      names.includes(n)
-    );
+    $deptSel.empty().append('<option value="0">All</option>');
+    names.forEach((name) => $deptSel.append(new Option(name, name)));
 
-    $deptWrap.empty();
-    names.forEach((name) => {
-      const id = "dept-" + sanitizeId(name);
-      const $row = $("<div>", { class: "form-check" });
-      const $inp = $("<input>", {
-        class: "form-check-input",
-        type: "checkbox",
-        id,
-        name: "deptFilter",
-      }).val(name);
-      if (selectedDepts.has(name)) $inp.prop("checked", true);
-      const $lbl = $("<label>", {
-        class: "form-check-label",
-        for: id,
-        text: name,
-      });
-      $row.append($inp, $lbl);
-      $deptWrap.append($row);
-    });
+    // restore selection
+    $deptSel.val(currentDept !== "0" ? currentDept : "0");
   });
 
   // ---- Locations ----
   $.getJSON("libs/php/listLocationsJSON.php", function (res) {
-    if (String(res?.status?.code) !== "200") {
-      console.warn("Location list error:", res);
-      return;
-    }
+    if (String(res?.status?.code) !== "200") return;
 
     const names = [
       ...new Set((res.data || []).map((l) => l.name).filter(Boolean)),
     ].sort((a, b) => a.localeCompare(b));
 
-    // Clean selections that no longer exist
-    personnelFilters.locFilter = personnelFilters.locFilter.filter((n) =>
-      names.includes(n)
-    );
+    $locSel.empty().append('<option value="0">All</option>');
+    names.forEach((name) => $locSel.append(new Option(name, name)));
 
-    $locWrap.empty();
-    names.forEach((name) => {
-      const id = "loc-" + sanitizeId(name);
-      const $row = $("<div>", { class: "form-check" });
-      const $inp = $("<input>", {
-        class: "form-check-input",
-        type: "checkbox",
-        id,
-        name: "locFilter",
-      }).val(name);
-      if (selectedLocs.has(name)) $inp.prop("checked", true);
-      const $lbl = $("<label>", {
-        class: "form-check-label",
-        for: id,
-        text: name,
-      });
-      $row.append($inp, $lbl);
-      $locWrap.append($row);
-    });
+    // restore selection
+    $locSel.val(currentLoc !== "0" ? currentLoc : "0");
   });
 }
+
+$("#filterDepartment")
+  .off("change")
+  .on("change", function () {
+    const v = $(this).val(); // name or "0"
+    if (v !== "0") {
+      // selecting a dept clears location
+      $("#filterLocation").val("0");
+      personnelFilters.deptFilter = [v];
+      personnelFilters.locFilter = [];
+    } else {
+      personnelFilters.deptFilter = [];
+    }
+    loadPersonnel();
+    updateFilterBtnState();
+  });
+
+$("#filterLocation")
+  .off("change")
+  .on("change", function () {
+    const v = $(this).val(); // name or "0"
+    if (v !== "0") {
+      // selecting a location clears department
+      $("#filterDepartment").val("0");
+      personnelFilters.locFilter = [v];
+      personnelFilters.deptFilter = [];
+    } else {
+      personnelFilters.locFilter = [];
+    }
+    loadPersonnel();
+    updateFilterBtnState();
+  });
+
+// Populate options each time the modal opens
+$("#filterModal")
+  .off("show.bs.modal")
+  .on("show.bs.modal", refreshFilterOptions);
 
 // ---------- Tab Buttons ----------
 $("#personnelBtn").off("click").on("click", loadPersonnel);
