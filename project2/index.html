@@ -4,100 +4,100 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Company Directory</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="libs/vendor/bootstrap.min.css" />
+    <link rel="stylesheet" href="libs/vendor/font_awesome.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <section class="container-lg py-3">
-      <div class="appHeader">
-        <div class="row g-2 align-items-start">
-          <div class="col">
-            <input
-              id="searchInp"
-              class="form-control mb-3"
-              placeholder="Search Employee..."
-            />
-          </div>
-
-          <div class="col-6 text-end me-2">
-            <div class="btn-group" role="group" aria-label="buttons">
-              <button id="refreshBtn" type="button" class="btn btn-primary">
-                <i class="fa-solid fa-refresh fa-fw"></i>
-              </button>
-              <button id="filterBtn" type="button" class="btn btn-primary">
-                <i class="fa-solid fa-filter fa-fw"></i>
-              </button>
-              <button id="addBtn" type="button" class="btn btn-primary">
-                <i class="fa-solid fa-plus fa-fw"></i>
-              </button>
-            </div>
-          </div>
+    <div class="appHeader">
+      <div class="row g-2 align-items-start">
+        <div class="col">
+          <input
+            id="searchInp"
+            class="form-control mb-3"
+            placeholder="Search Employee..."
+          />
         </div>
 
-        <ul class="nav nav-tabs mt-2" id="myTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link active"
-              id="personnelBtn"
-              data-bs-toggle="tab"
-              data-bs-target="#personnel-tab-pane"
-              type="button"
-              role="tab"
-              aria-controls="home-tab-pane"
-              aria-selected="true"
-            >
-              <i class="fa-solid fa-person fa-lg fa-fw"></i
-              ><span class="d-none d-sm-block">Personnel</span>
+        <div class="col-6 text-end me-2">
+          <div class="btn-group" role="group" aria-label="buttons">
+            <button id="refreshBtn" type="button" class="btn btn-primary">
+              <i class="fa-solid fa-refresh fa-fw"></i>
             </button>
-          </li>
-          <li class="nav-item" role="presentation">
             <button
-              class="nav-link"
-              id="departmentsBtn"
-              data-bs-toggle="tab"
-              data-bs-target="#departments-tab-pane"
+              id="filterBtn"
               type="button"
-              role="tab"
-              aria-controls="profile-tab-pane"
-              aria-selected="false"
+              class="btn btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#filterModal"
             >
-              <i class="fa-solid fa-building fa-lg fa-fw"></i
-              ><span class="d-none d-sm-block">Departments</span>
+              <i class="fa-solid fa-filter fa-fw"></i>
             </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link"
-              id="locationsBtn"
-              data-bs-toggle="tab"
-              data-bs-target="#locations-tab-pane"
-              type="button"
-              role="tab"
-              aria-controls="contact-tab-pane"
-              aria-selected="false"
-            >
-              <i class="fa-solid fa-map-location-dot fa-lg fa-fw"></i
-              ><span class="d-none d-sm-block">Locations</span>
+            <button id="addBtn" type="button" class="btn btn-primary">
+              <i class="fa-solid fa-plus fa-fw"></i>
             </button>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
 
-      <div class="tab-content bg-white mt-2">
-        <div
-          class="tab-pane show active"
-          id="personnel-tab-pane"
-          role="tabpanel"
-          aria-labelledby="home-tab"
-          tabindex="0"
-        >
+      <ul class="nav nav-tabs mt-2" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="personnelBtn"
+            data-bs-toggle="tab"
+            data-bs-target="#personnel-tab-pane"
+            type="button"
+            role="tab"
+            aria-controls="home-tab-pane"
+            aria-selected="true"
+          >
+            <i class="fa-solid fa-person fa-lg fa-fw"></i
+            ><span class="d-none d-sm-block">Personnel</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="departmentsBtn"
+            data-bs-toggle="tab"
+            data-bs-target="#departments-tab-pane"
+            type="button"
+            role="tab"
+            aria-controls="profile-tab-pane"
+            aria-selected="false"
+          >
+            <i class="fa-solid fa-building fa-lg fa-fw"></i
+            ><span class="d-none d-sm-block">Departments</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="locationsBtn"
+            data-bs-toggle="tab"
+            data-bs-target="#locations-tab-pane"
+            type="button"
+            role="tab"
+            aria-controls="contact-tab-pane"
+            aria-selected="false"
+          >
+            <i class="fa-solid fa-map-location-dot fa-lg fa-fw"></i
+            ><span class="d-none d-sm-block">Locations</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tab-content bg-white mt-2">
+      <div
+        class="tab-pane show active"
+        id="personnel-tab-pane"
+        role="tabpanel"
+        aria-labelledby="home-tab"
+        tabindex="0"
+      >
+        <div class="overflow-auto" style="max-height: 70vh">
           <table class="table table-hover">
             <tbody id="personnelTableBody">
               <tr>
@@ -125,7 +125,7 @@
                     type="button"
                     class="btn btn-primary btn-sm"
                     data-bs-toggle="modal"
-                    data-bs-target="#deletePersonnelModal"
+                    data-bs-target="#areYouSurePersonnelModal"
                     data-id="23"
                   >
                     <i class="fa-solid fa-trash fa-fw"></i>
@@ -135,14 +135,16 @@
             </tbody>
           </table>
         </div>
+      </div>
 
-        <div
-          class="tab-pane"
-          id="departments-tab-pane"
-          role="tabpanel"
-          aria-labelledby="profile-tab"
-          tabindex="0"
-        >
+      <div
+        class="tab-pane"
+        id="departments-tab-pane"
+        role="tabpanel"
+        aria-labelledby="profile-tab"
+        tabindex="0"
+      >
+        <div class="overflow-auto" style="max-height: 70vh">
           <table class="table table-hover">
             <tbody id="departmentTableBody">
               <tr>
@@ -172,14 +174,16 @@
             </tbody>
           </table>
         </div>
+      </div>
 
-        <div
-          class="tab-pane"
-          id="locations-tab-pane"
-          role="tabpanel"
-          aria-labelledby="contact-tab"
-          tabindex="0"
-        >
+      <div
+        class="tab-pane"
+        id="locations-tab-pane"
+        role="tabpanel"
+        aria-labelledby="contact-tab"
+        tabindex="0"
+      >
+        <div class="overflow-auto" style="max-height: 70vh">
           <table class="table table-hover">
             <tbody id="locationTableBody">
               <tr>
@@ -197,18 +201,18 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <footer class="border-top text-center fw-bold">
-        <p class="fw-light my-3">Company Directory version 1.0</p>
-      </footer>
-    </section>
+    <footer class="border-top text-center fw-bold">
+      <p class="fw-light my-3">Company Directory version 1.0</p>
+    </footer>
 
     <!-- Filter Modal -->
     <div
       id="filterModal"
       class="modal fade"
       tabindex="-1"
-      data-bs-backdrop="static"
+      data-bs-backdrop="false"
       data-bs-keyboard="false"
       aria-labelledby="filterModalLabel"
       aria-hidden="true"
@@ -218,7 +222,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title" id="filterModalLabel">Filter & Sort</h5>
+            <h5 class="modal-title" id="filterModalLabel">Filter employees</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -226,62 +230,40 @@
               aria-label="Close"
             ></button>
           </div>
+
           <div class="modal-body">
             <form id="filterForm">
-              <fieldset class="mb-4">
-                <legend class="fs-6 fw-bold">Employees</legend>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="radio"
-                    id="empSortAZ"
-                    name="empSort"
-                    value="AZ"
-                  />
-                  <label class="form-check-label" for="empSortAZ"
-                    >Sort alphabetically (A–Z)</label
-                  >
-                </div>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="radio"
-                    id="empSortZA"
-                    name="empSort"
-                    value="ZA"
-                  />
-                  <label class="form-check-label" for="empSortZA"
-                    >Sort alphabetically (Z–A)</label
-                  >
-                </div>
-              </fieldset>
+              <div class="form-floating mb-3">
+                <select
+                  class="form-select"
+                  id="filterDepartment"
+                  placeholder="Department"
+                >
+                  <option value="0">All</option>
+                </select>
+                <label for="filterDepartment">Department</label>
+              </div>
 
-              <fieldset class="mb-4">
-                <legend class="fs-6 fw-bold">Departments</legend>
-                <div id="deptFilterContainer" class="vstack gap-1"></div>
-              </fieldset>
-
-              <fieldset class="mb-3">
-                <legend class="fs-6 fw-bold">Locations</legend>
-                <div id="locFilterContainer" class="vstack gap-1"></div>
-              </fieldset>
+              <div class="form-floating">
+                <select
+                  class="form-select"
+                  id="filterLocation"
+                  placeholder="Location"
+                >
+                  <option value="0">All</option>
+                </select>
+                <label for="filterLocation">Location</label>
+              </div>
             </form>
           </div>
 
           <div class="modal-footer">
             <button
               type="button"
-              class="btn btn-outline-primary btn-sm"
-              id="applyFilterBtn"
-            >
-              APPLY
-            </button>
-            <button
-              type="button"
-              class="btn btn-outline-secondary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
               data-bs-dismiss="modal"
             >
-              CANCEL
+              CLOSE
             </button>
           </div>
         </div>
@@ -400,6 +382,8 @@
       class="modal fade"
       tabindex="-1"
       aria-hidden="true"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
     >
       <div
         class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
@@ -444,13 +428,13 @@
             <button
               type="submit"
               form="editDepartmentForm"
-              class="btn btn-outline-primary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
             >
               SAVE
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
               data-bs-dismiss="modal"
             >
               CANCEL
@@ -460,7 +444,14 @@
       </div>
     </div>
 
-    <div id="locationModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div
+      id="locationModal"
+      class="modal fade"
+      tabindex="-1"
+      aria-hidden="true"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+    >
       <div
         class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
       >
@@ -495,13 +486,13 @@
             <button
               type="submit"
               form="locationForm"
-              class="btn btn-outline-primary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
             >
               SAVE
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
               data-bs-dismiss="modal"
             >
               CANCEL
@@ -511,8 +502,662 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div
+      id="areYouSurePersonnelModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Remove employee entry?</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="areYouSurePersonnelForm">
+              <input id="areYouSurePersonnelID" type="hidden" />
+            </form>
+            <p>
+              Are you sure that you want to remove the entry for
+              <span id="areYouSurePersonnelName" class="fw-bold"></span>?
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="submit"
+              form="areYouSurePersonnelForm"
+              class="btn btn-outline-primary btn-sm myBtn"
+            >
+              YES
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              NO
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="cantDeleteDepartmentModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Cannot remove department ...</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            You cannot remove the entry for
+            <span id="cantDeleteDeptName" class="fw-bold"></span> because it has
+            <span id="personnelCount" class="fw-bold"></span> employees assigned
+            to it.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="areYouSureDeleteDepartmentModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Remove department?</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="deleteDepartmentForm">
+              <input type="hidden" id="deleteDepartmentID" />
+              <p>
+                Are you sure that you want to remove the entry for
+                <span id="areYouSureDeptName" class="fw-bold"></span>?
+              </p>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="submit"
+              form="deleteDepartmentForm"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              YES
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              NO
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="areYouSureDeleteLocationModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Remove location?</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="deleteLocationForm">
+              <input type="hidden" id="deleteLocationID" />
+              <p>
+                Are you sure that you want to remove the entry for
+                <span id="areYouSureLocationName" class="fw-bold"></span>?
+              </p>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="submit"
+              form="deleteLocationForm"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              YES
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              NO
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="cantDeleteLocationModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Cannot remove location ...</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            You cannot remove the entry for
+            <span id="cantDeleteLocationName" class="fw-bold"></span> because it
+            has <span id="departmentCount" class="fw-bold"></span> departments
+            assigned to it.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error loading personnel -->
+    <div
+      id="errorLoadPersonnelModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error loading personnel</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error loading departments -->
+    <div
+      id="errorLoadDepartmentsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error loading departments</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error loading locations -->
+    <div
+      id="errorLoadLocationsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error loading locations</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search error (details filled in JS) -->
+    <div
+      id="errorSearchModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Search error</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="errorSearchDetail" class="mb-0">Unknown error</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error retrieving data (generic) -->
+    <div
+      id="errorRetrievingDataModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error retrieving data</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error retrieving department details -->
+    <div
+      id="errorDeptDetailsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error retrieving department details</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location not found -->
+    <div
+      id="errorLocationNotFoundModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Location not found</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">It may have been removed.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error retrieving location details -->
+    <div
+      id="errorLocationDetailsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Error retrieving location details</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body"><p class="mb-0">Please try again.</p></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Network/server error while loading locations -->
+    <div
+      id="errorNetworkLoadLocationsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Network error</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">Network/server error while loading locations.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Network/server error while saving personnel -->
+    <div
+      id="errorNetworkSavePersonnelModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Network error</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">Network/server error while saving.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Network/server error while saving location -->
+    <div
+      id="errorNetworkSaveLocationModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Network error</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">Network/server error while saving location.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete personnel failed (details filled in JS) -->
+    <div
+      id="errorDeletePersonnelModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content shadow">
+          <div class="modal-header bg-primary bg-gradient text-white">
+            <h5 class="modal-title">Delete failed</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="errorDeletePersonnelDetail" class="mb-0">Unknown error</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm myBtn"
+              data-bs-dismiss="modal"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="libs/vendor/jquery.min.js"></script>
+    <script src="libs/vendor/bootstrap.bundle.min.js"></script>
     <script src="index.js"></script>
   </body>
 </html>
