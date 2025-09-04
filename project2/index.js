@@ -354,45 +354,63 @@ $("#editPersonnelModal")
     $dept
       .empty()
       .append('<option value="" disabled selected>Loading…</option>');
+
     $.getJSON("libs/php/listDepartments.php", function (res) {
-      if (String(res?.status?.code) !== "200")
+      if (String(res?.status?.code) !== "200") {
         $("#errorLoadDepartmentsModal").modal("show");
-      $dept
-        .empty()
-        .append(
-          '<option value="" disabled selected>Select department…</option>'
-        );
-      (res.data || []).forEach((d) => $dept.append(new Option(d.name, d.id)));
+        return;
+      }
+
+      const depts = res.data || [];
+      const $saveBtn = $modal.find(
+        "button[form='editPersonnelForm'][type='submit']"
+      );
+
+      // Build options (no placeholder)
+      $dept.empty();
+      depts.forEach((d) => $dept.append(new Option(d.name, String(d.id))));
 
       if (id) {
-        // Edit: fetch employee details
+        // Edit: fetch & preselect employee's department
         $modal.find(".modal-title").text("Edit employee");
         $.post(
           "libs/php/getPersonnelByID.php",
           { id },
           function (result) {
-            if (String(result?.status?.code) !== "200")
+            if (String(result?.status?.code) !== "200") {
               $("#errorRetrievingDataModal").modal("show");
+              return;
+            }
             const p = result.data.personnel?.[0];
             if (!p) {
               $("#errorRetrievingDataModal").modal("show");
               return;
             }
-
             $("#editPersonnelEmployeeID").val(p.id);
             $("#editPersonnelFirstName").val(p.firstName);
             $("#editPersonnelLastName").val(p.lastName);
             $("#editPersonnelJobTitle").val(p.jobTitle);
             $("#editPersonnelEmailAddress").val(p.email);
-            $dept.val(p.departmentID);
+            $dept.val(String(p.departmentID)); // preselect employee’s dept
           },
           "json"
         ).fail(() => alert("Error retrieving data"));
       } else {
-        // Add
+        // Add: default to the first department from the API
         $modal.find(".modal-title").text("Add Employee");
         $form.reset();
         $("#editPersonnelEmployeeID").val("");
+
+        if (depts.length > 0) {
+          $dept.val(String(depts[0].id)); // select first dept
+          $saveBtn.prop("disabled", false);
+        } else {
+          // No departments available: show a non-selectable notice and disable Save
+          $dept.append(
+            '<option value="" disabled selected>No departments available</option>'
+          );
+          $saveBtn.prop("disabled", true);
+        }
       }
     }).fail(() => alert("Error loading departments"));
   });
