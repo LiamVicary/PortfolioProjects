@@ -18,7 +18,6 @@
             placeholder="Search Employee..."
           />
         </div>
-
         <div class="col-6 text-end me-2">
           <div class="btn-group" role="group" aria-label="buttons">
             <button id="refreshBtn" type="button" class="btn btn-primary">
@@ -39,7 +38,6 @@
           </div>
         </div>
       </div>
-
       <ul class="nav nav-tabs mt-2" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
           <button
@@ -88,7 +86,6 @@
         </li>
       </ul>
     </div>
-
     <div class="tab-content bg-white mt-2">
       <div
         class="tab-pane show active"
@@ -136,7 +133,6 @@
           </table>
         </div>
       </div>
-
       <div
         class="tab-pane"
         id="departments-tab-pane"
@@ -175,7 +171,6 @@
           </table>
         </div>
       </div>
-
       <div
         class="tab-pane"
         id="locations-tab-pane"
@@ -202,11 +197,9 @@
         </div>
       </div>
     </div>
-
     <footer class="border-top text-center fw-bold">
       <p class="fw-light my-3">Company Directory version 1.0</p>
     </footer>
-
     <!-- Filter Modal -->
     <div
       id="filterModal"
@@ -230,7 +223,6 @@
               aria-label="Close"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="filterForm">
               <div class="form-floating mb-3">
@@ -243,7 +235,6 @@
                 </select>
                 <label for="filterDepartment">Department</label>
               </div>
-
               <div class="form-floating">
                 <select
                   class="form-select"
@@ -256,7 +247,6 @@
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="button"
@@ -269,7 +259,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="editPersonnelModal"
       class="modal fade"
@@ -292,11 +281,9 @@
               aria-label="Close"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="editPersonnelForm">
               <input type="hidden" id="editPersonnelEmployeeID" name="id" />
-
               <div class="form-floating mb-3">
                 <input
                   type="text"
@@ -308,7 +295,6 @@
                 />
                 <label for="editPersonnelFirstName">First name</label>
               </div>
-
               <div class="form-floating mb-3">
                 <input
                   type="text"
@@ -320,7 +306,6 @@
                 />
                 <label for="editPersonnelLastName">Last name</label>
               </div>
-
               <div class="form-floating mb-3">
                 <input
                   type="text"
@@ -332,7 +317,6 @@
                 />
                 <label for="editPersonnelJobTitle">Job Title</label>
               </div>
-
               <div class="form-floating mb-3">
                 <input
                   type="email"
@@ -344,19 +328,18 @@
                 />
                 <label for="editPersonnelEmailAddress">Email Address</label>
               </div>
-
               <div class="form-floating">
                 <select
                   class="form-select"
                   id="editPersonnelDepartment"
                   name="departmentID"
-                  placeholder="Department"
+                  required
+                  aria-required="true"
                 ></select>
                 <label for="editPersonnelDepartment">Department</label>
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="submit"
@@ -376,7 +359,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="editDepartmentModal"
       class="modal fade"
@@ -397,7 +379,6 @@
               data-bs-dismiss="modal"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="editDepartmentForm">
               <input type="hidden" id="editDepartmentID" name="id" />
@@ -423,7 +404,6 @@
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="submit"
@@ -443,7 +423,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="locationModal"
       class="modal fade"
@@ -464,7 +443,6 @@
               data-bs-dismiss="modal"
             ></button>
           </div>
-
           <div class="modal-body">
             <form id="locationForm">
               <input type="hidden" id="locationId" name="id" />
@@ -481,7 +459,6 @@
               </div>
             </form>
           </div>
-
           <div class="modal-footer">
             <button
               type="submit"
@@ -501,7 +478,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="areYouSurePersonnelModal"
       class="modal fade"
@@ -549,7 +525,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="cantDeleteDepartmentModal"
       class="modal fade"
@@ -587,7 +562,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="areYouSureDeleteDepartmentModal"
       class="modal fade"
@@ -636,7 +610,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="areYouSureDeleteLocationModal"
       class="modal fade"
@@ -685,7 +658,6 @@
         </div>
       </div>
     </div>
-
     <div
       id="cantDeleteLocationModal"
       class="modal fade"
@@ -723,7 +695,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error loading personnel -->
     <div
       id="errorLoadPersonnelModal"
@@ -758,7 +729,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error loading departments -->
     <div
       id="errorLoadDepartmentsModal"
@@ -793,7 +763,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error loading locations -->
     <div
       id="errorLoadLocationsModal"
@@ -828,7 +797,6 @@
         </div>
       </div>
     </div>
-
     <!-- Search error (details filled in JS) -->
     <div
       id="errorSearchModal"
@@ -865,7 +833,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error retrieving data (generic) -->
     <div
       id="errorRetrievingDataModal"
@@ -900,7 +867,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error retrieving department details -->
     <div
       id="errorDeptDetailsModal"
@@ -935,7 +901,6 @@
         </div>
       </div>
     </div>
-
     <!-- Location not found -->
     <div
       id="errorLocationNotFoundModal"
@@ -972,7 +937,6 @@
         </div>
       </div>
     </div>
-
     <!-- Error retrieving location details -->
     <div
       id="errorLocationDetailsModal"
@@ -1007,7 +971,6 @@
         </div>
       </div>
     </div>
-
     <!-- Network/server error while loading locations -->
     <div
       id="errorNetworkLoadLocationsModal"
@@ -1044,7 +1007,6 @@
         </div>
       </div>
     </div>
-
     <!-- Network/server error while saving personnel -->
     <div
       id="errorNetworkSavePersonnelModal"
@@ -1081,7 +1043,6 @@
         </div>
       </div>
     </div>
-
     <!-- Network/server error while saving location -->
     <div
       id="errorNetworkSaveLocationModal"
@@ -1118,7 +1079,6 @@
         </div>
       </div>
     </div>
-
     <!-- Delete personnel failed (details filled in JS) -->
     <div
       id="errorDeletePersonnelModal"
@@ -1155,7 +1115,6 @@
         </div>
       </div>
     </div>
-
     <script src="libs/vendor/jquery.min.js"></script>
     <script src="libs/vendor/bootstrap.bundle.min.js"></script>
     <script src="index.js"></script>
