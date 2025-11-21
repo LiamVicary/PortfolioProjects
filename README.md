@@ -1,6 +1,6 @@
 ## Hi there 👋
 
-Welcome to my portfolio projects. These projects were designed as part of the ITCareerSwitch Full Stack Coding Engineer course.
+Welcome to my portfolio projects. Two full-stack apps demonstrating API integration, mapping UX, and CRUD systems. Built with vanilla JS + PHP micro-services + SQL, focused on clean UI and practical architecture.
 
 📘 README — Gazetteer
 Overview
@@ -102,3 +102,7 @@ The frontend uses Bootstrap components and jQuery events to drive all UI interac
 Project Goals
 
 Provide a clean, efficient admin-style interface for managing company data using a lightweight vanilla JS + PHP stack.
+
+------------------------
+
+These projects were designed as part of the ITCareerSwitch Full Stack Coding Engineer course.
