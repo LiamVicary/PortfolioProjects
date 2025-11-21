@@ -2,7 +2,7 @@
 
 Welcome to my portfolio projects. Two full-stack apps demonstrating API integration, mapping UX, and CRUD systems. Built with vanilla JS + PHP micro-services + SQL, focused on clean UI and practical architecture.
 
-📘 README — Gazetteer
+📘 README — Project 1 - Gazetteer
 Overview
 
 Gazetteer is an interactive world-exploration tool that allows users to view geolocation data, country information, weather, news, and points of interest. It integrates multiple APIs through PHP micro-endpoints and presents the results on a dynamic Leaflet map.
@@ -50,7 +50,7 @@ Provide an accessible, map-driven interface for exploring any location on Earth 
 ------------------------------------------
 
 
-📘 README — Company Directory
+📘 README — Project 2 - Company Directory
 Overview
 
 Company Directory is a full-stack CRUD management system for maintaining personnel, department, and location records. It provides a responsive, Bootstrap-based interface paired with PHP endpoints and a SQL database.
